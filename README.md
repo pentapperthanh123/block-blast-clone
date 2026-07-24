@@ -46,11 +46,12 @@ Xem chi tiết trong [BLUEPRINT.md](./BLUEPRINT.md) và [PROJECT_STRUCTURE.md](.
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| **Framework** | React Native | 0.74.0 |
-| **Language** | TypeScript | 5.0.4 |
-| **Rendering** | React Native Skia | 1.2.0 |
-| **Animation** | Reanimated | 3.10.0 |
-| **Gestures** | Gesture Handler | 2.16.0 |
+| **Framework** | Expo + React Native | ~51.0.0 |
+| **Language** | TypeScript | ~5.3.3 |
+| **Web Support** | React Native Web | ~0.19.10 |
+| **Rendering** | React Native Skia | 1.2.3 |
+| **Animation** | Reanimated | ~3.10.1 |
+| **Gestures** | Gesture Handler | ~2.16.1 |
 | **State** | Zustand | 4.5.0 |
 
 ---
@@ -73,25 +74,34 @@ cd block-blast-clone
 
 # Install dependencies
 npm install
-
-# iOS only (macOS)
-cd ios && pod install && cd ..
 ```
 
 ### Run Development
 
 ```bash
+# Start Expo dev server
+npm start
+
+# Then choose platform:
+# Press 'w' - Run on Web
+# Press 'a' - Run on Android
+# Press 'i' - Run on iOS (macOS only)
+```
+
+**Or run directly:**
+
+```bash
+# Web (recommended for development)
+npm run web
+
 # Android
 npm run android
 
 # iOS (macOS only)
 npm run ios
-
-# Start Metro bundler
-npm start
 ```
 
-Xem thêm trong [SETUP.md](./SETUP.md).
+Xem thêm trong [EXPO_SETUP.md](./EXPO_SETUP.md).
 
 ---
 
@@ -186,7 +196,8 @@ Xem [Pull Request Template](./.github/PULL_REQUEST_TEMPLATE.md) để biết th�
 ## 📝 Documentation
 
 - [BLUEPRINT.md](./BLUEPRINT.md) - Master architecture document
-- [SETUP.md](./SETUP.md) - Installation & setup guide
+- [EXPO_SETUP.md](./EXPO_SETUP.md) - Expo setup & platform guide
+- [SETUP.md](./SETUP.md) - Original React Native CLI setup (legacy)
 - [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - Folder structure & dependencies
 - [.github/README.md](./.github/README.md) - CI/CD documentation
 

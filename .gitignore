@@ -44,7 +44,9 @@ ios/Pods/
 
 # Expo
 .expo/
+.expo-shared/
 dist/
+web-build/
 
 # Metro
 .metro-health-check*
