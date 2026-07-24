@@ -3,13 +3,19 @@
  * Clean Architecture - Domain Layer
  */
 
-// Game State Types
-export type CellState = 0 | 1; // 0 = empty, 1 = filled
+// Cell State Enum
+export enum CellState {
+  Empty = 0,
+  Filled = 1,
+}
+
+// Grid Type
 export type Grid = CellState[][];
 
+// Position (row, col for grid-based positioning)
 export interface Position {
-  x: number;
-  y: number;
+  row: number;
+  col: number;
 }
 
 export interface BlockShape {
