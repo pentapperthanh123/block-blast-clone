@@ -183,23 +183,45 @@ Combo Bonus = baseScore × (COMBO_MULTIPLIER ^ comboCount)
 
 ## 🤝 Contributing
 
-1. Fork repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+### Branching Strategy
 
-Xem [Pull Request Template](./.github/PULL_REQUEST_TEMPLATE.md) để biết thêm chi tiết.
+We use a **two-branch workflow**:
+- **`master`** - Production (stable releases)
+- **`dev`** - Development (active development)
+
+### Workflow
+
+1. Fork repository
+2. Create feature branch from `dev`: `git checkout -b feature/YourFeature dev`
+3. Make your changes and commit: `git commit -m 'feat: add amazing feature'`
+4. Push to your fork: `git push origin feature/YourFeature`
+5. Open Pull Request to `dev` branch
+6. Wait for CI checks to pass ✅
+7. Get review approval (if required)
+8. Merge!
+
+### Documentation
+
+- [GIT_WORKFLOW.md](./GIT_WORKFLOW.md) - Complete Git workflow guide
+- [BRANCH_PROTECTION_SETUP.md](./BRANCH_PROTECTION_SETUP.md) - Branch protection setup
+- [Pull Request Template](./.github/PULL_REQUEST_TEMPLATE.md) - PR template
 
 ---
 
 ## 📝 Documentation
 
+### Architecture & Setup
 - [BLUEPRINT.md](./BLUEPRINT.md) - Master architecture document
 - [EXPO_SETUP.md](./EXPO_SETUP.md) - Expo setup & platform guide
-- [SETUP.md](./SETUP.md) - Original React Native CLI setup (legacy)
 - [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) - Folder structure & dependencies
-- [.github/README.md](./.github/README.md) - CI/CD documentation
+- [SETUP.md](./SETUP.md) - Original React Native CLI setup (legacy)
+
+### Development Workflow
+- [GIT_WORKFLOW.md](./GIT_WORKFLOW.md) - Git branching strategy & workflow
+- [BRANCH_PROTECTION_SETUP.md](./BRANCH_PROTECTION_SETUP.md) - GitHub branch protection guide
+
+### CI/CD
+- [.github/README.md](./.github/README.md) - GitHub Actions workflows documentation
 
 ---
 
