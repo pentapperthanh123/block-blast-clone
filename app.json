@@ -26,7 +26,6 @@
       "package": "com.pentapperthanh.blockblastclone"
     },
     "web": {
-      "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "plugins": [

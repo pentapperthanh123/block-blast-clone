@@ -1,9 +1,6 @@
 /**
- * Game Components
- * Clean Architecture - UI Layer
+ * Game Components Index
  */
 
-// TODO: Implement game components
-// export { default as GameBoard } from './GameBoard';
-// export { default as ScoreDisplay } from './ScoreDisplay';
-// export { default as PieceSelector } from './PieceSelector';
+export * from './GridCanvas';
+export * from './BlockPicker';

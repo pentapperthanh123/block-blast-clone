@@ -20,11 +20,11 @@ describe('Type Definitions', () => {
     expect(grid[1][1]).toBe(1);
   });
 
-  it('should define Position with x and y', () => {
-    const position: Position = { x: 3, y: 5 };
+  it('should define Position with row and col', () => {
+    const position: Position = { row: 3, col: 5 };
     
-    expect(position.x).toBe(3);
-    expect(position.y).toBe(5);
+    expect(position.row).toBe(3);
+    expect(position.col).toBe(5);
   });
 
   it('should define BlockShape structure', () => {
