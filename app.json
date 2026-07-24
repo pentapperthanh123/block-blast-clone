@@ -38,6 +38,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ca1c1e70-5ea9-43c6-9f66-19bec002be17"
+      }
+    },
+    "owner": "pentapperthanh"
   }
 }
