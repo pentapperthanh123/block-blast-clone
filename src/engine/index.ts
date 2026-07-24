@@ -1,12 +1,10 @@
 /**
- * Game Engine - Pure Logic Layer
- * Clean Architecture - Use Cases / Business Logic
- * 
- * This module exports all core game logic functions.
- * All functions here are PURE - no side effects, no mutations.
+ * Game Engine - Business Logic Layer
+ * Export all engine modules
  */
 
-// TODO: Implement these modules
-// export * from './MatrixUtils';
-// export * from './ScoreCalculator';
-// export * from './CollisionDetector';
+export * from './GridManager';
+export * from './LineDetector';
+export * from './BlockGenerator';
+export * from './ScoreCalculator';
+export * from './GameEngine';

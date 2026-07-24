@@ -8,7 +8,7 @@ export const GRID_SIZE = 8;
 export const CELL_SIZE = 40; // pixels per cell
 
 // Scoring
-export const POINTS_PER_BLOCK = 5;
+export const POINTS_PER_BLOCK = 10; // Points per cell placed
 export const POINTS_PER_LINE = 100;
 export const COMBO_MULTIPLIER = 1.5;
 
@@ -22,6 +22,9 @@ export const BLOCK_COLORS = {
   RED: '#FF6B6B',
   BLUE: '#5B7CFF',
 } as const;
+
+// Block colors as array (for random selection)
+export const BLOCK_COLORS_ARRAY = Object.values(BLOCK_COLORS);
 
 // UI Colors
 export const UI_COLORS = {
