@@ -75,6 +75,9 @@ coverage/
 # Project-specific agent configuration
 .agents/
 
+# Understand Anything knowledge graph
+.understand-anything/
+
 # Build artifacts
 android/app/build/
 ios/build/
