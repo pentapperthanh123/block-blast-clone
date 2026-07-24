@@ -186,19 +186,21 @@ Combo Bonus = baseScore × (COMBO_MULTIPLIER ^ comboCount)
 ### Branching Strategy
 
 We use a **two-branch workflow**:
+- **`dev`** - ⭐ **Default branch** - Development (active development)
 - **`master`** - Production (stable releases)
-- **`dev`** - Development (active development)
+
+> **Note:** `dev` is the default branch. All PRs automatically target `dev` unless specified otherwise.
 
 ### Workflow
 
-1. Fork repository
-2. Create feature branch from `dev`: `git checkout -b feature/YourFeature dev`
+1. Fork repository (automatically forks from `dev`)
+2. Create feature branch: `git checkout -b feature/YourFeature`
 3. Make your changes and commit: `git commit -m 'feat: add amazing feature'`
 4. Push to your fork: `git push origin feature/YourFeature`
-5. Open Pull Request to `dev` branch
+5. Open Pull Request (automatically targets `dev`)
 6. Wait for CI checks to pass ✅
 7. Get review approval (if required)
-8. Merge!
+8. Merge! (branch will be automatically deleted after merge)
 
 ### Documentation
 

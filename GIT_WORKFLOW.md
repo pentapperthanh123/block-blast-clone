@@ -14,19 +14,21 @@ master (production)
 
 ## 🌲 Branch Overview
 
+### `dev` - Development Branch 🛠️ ⭐ **DEFAULT**
+- **Purpose:** Integration branch for active development
+- **Status:** ⭐ **Default branch** of the repository
+- **Deployment:** Automatically deploys to staging/dev environment (future)
+- **Protection:** ✅ Requires CI checks passing
+- **Merge from:** Feature branches
+- **Direct commits:** ⚠️ Allowed for small fixes (discouraged)
+- **Note:** All new PRs target this branch by default
+
 ### `master` - Production Branch 🚀
 - **Purpose:** Stable, production-ready code
 - **Deployment:** Automatically deploys to production (future)
 - **Protection:** ✅ Requires PR reviews + CI checks passing
 - **Merge from:** `dev` branch only (via PR)
 - **Direct commits:** ❌ Forbidden
-
-### `dev` - Development Branch 🛠️
-- **Purpose:** Integration branch for active development
-- **Deployment:** Automatically deploys to staging/dev environment (future)
-- **Protection:** ✅ Requires CI checks passing
-- **Merge from:** Feature branches
-- **Direct commits:** ⚠️ Allowed for small fixes (discouraged)
 
 ### `feature/*` - Feature Branches 💡
 - **Purpose:** Individual features, bug fixes, improvements

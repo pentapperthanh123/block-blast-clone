@@ -2,7 +2,20 @@
 
 ## 📋 Quick Setup Checklist
 
-Bạn đang ở GitHub Settings → Rulesets. Follow these steps:
+Bạn đang ở GitHub Settings. Follow these steps theo thứ tự:
+
+### ✅ Bước 1: Đặt `dev` làm nhánh mặc định
+1. `Settings` → `General`
+2. Phần **"Default branch"** → Click **Switch**
+3. Chọn `dev` → **Update** → Confirm
+
+### ✅ Bước 2: Bật tự động xóa nhánh sau merge
+1. Cùng trang `Settings` → `General`
+2. Phần **"Pull Requests"**
+3. ✅ Bật: **"Automatically delete head branches"**
+
+### ✅ Bước 3: Cấu hình Branch Protection (Rulesets)
+Tiếp tục với hướng dẫn dưới đây:
 
 ---
 
@@ -48,6 +61,8 @@ Click **"Add target"** → **"Include by pattern"**
 ---
 
 ## 🛠️ Setup for `dev` Branch (Development)
+
+> **⭐ Default Branch**: `dev` is set as the default branch of the repository
 
 ### 1. Create Ruleset
 
