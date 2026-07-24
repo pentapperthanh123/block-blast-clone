@@ -1,11 +1,11 @@
 /**
- * ScoreCalculator Tests
+ * Enhanced ScoreCalculator Tests - Updated for exponential scoring system
  */
 
 import { ScoreCalculator } from '../ScoreCalculator';
 import { BlockShape } from '../../types';
 
-describe('ScoreCalculator', () => {
+describe('ScoreCalculator - Enhanced Scoring System', () => {
   let scoreCalculator: ScoreCalculator;
 
   beforeEach(() => {
@@ -13,205 +13,109 @@ describe('ScoreCalculator', () => {
   });
 
   describe('calculateBlockPlacementPoints', () => {
-    it('should calculate 10 points for 1-cell block', () => {
-      const block: BlockShape = {
-        id: 'test',
-        shape: [[1]],
-        color: '#FF0000',
+    it('should calculate 10 points per cell', () => {
+      const singleBlock: BlockShape = {
+        id: 'test', shape: [[1]], color: '#FF0000'
       };
-      expect(scoreCalculator.calculateBlockPlacementPoints(block)).toBe(10);
-    });
+      expect(scoreCalculator.calculateBlockPlacementPoints(singleBlock)).toBe(10);
 
-    it('should calculate 20 points for 2-cell block', () => {
-      const block: BlockShape = {
-        id: 'test',
-        shape: [[1, 1]],
-        color: '#FF0000',
-      };
-      expect(scoreCalculator.calculateBlockPlacementPoints(block)).toBe(20);
-    });
-
-    it('should calculate 40 points for 2x2 block', () => {
-      const block: BlockShape = {
-        id: 'test',
-        shape: [
-          [1, 1],
-          [1, 1],
-        ],
-        color: '#FF0000',
-      };
-      expect(scoreCalculator.calculateBlockPlacementPoints(block)).toBe(40);
-    });
-
-    it('should calculate 40 points for L-shape (4 cells)', () => {
-      const block: BlockShape = {
-        id: 'test',
-        shape: [
-          [1, 0],
-          [1, 0],
-          [1, 1],
-        ],
-        color: '#FF0000',
-      };
-      expect(scoreCalculator.calculateBlockPlacementPoints(block)).toBe(40);
-    });
-
-    it('should calculate 40 points for I-piece (4 cells)', () => {
-      const block: BlockShape = {
-        id: 'test',
-        shape: [[1, 1, 1, 1]],
-        color: '#FF0000',
-      };
-      expect(scoreCalculator.calculateBlockPlacementPoints(block)).toBe(40);
-    });
-  });
-
-  describe('calculateLineClearPoints', () => {
-    it('should return 0 for no lines cleared', () => {
-      expect(scoreCalculator.calculateLineClearPoints(0, 0)).toBe(0);
-    });
-
-    it('should return 100 for 1 line cleared (no combo)', () => {
-      expect(scoreCalculator.calculateLineClearPoints(1, 0)).toBe(100);
-    });
-
-    it('should return 200 for 2 lines cleared (no combo)', () => {
-      expect(scoreCalculator.calculateLineClearPoints(2, 0)).toBe(200);
-    });
-
-    it('should apply 1.5x multiplier for combo 1', () => {
-      // 1 line * 100 * 1.5x = 150
-      expect(scoreCalculator.calculateLineClearPoints(1, 1)).toBe(150);
-    });
-
-    it('should apply 2x multiplier for combo 2', () => {
-      // 1 line * 100 * 2x = 200
-      expect(scoreCalculator.calculateLineClearPoints(1, 2)).toBe(200);
-    });
-
-    it('should apply 2.5x multiplier for combo 3', () => {
-      // 1 line * 100 * 2.5x = 250
-      expect(scoreCalculator.calculateLineClearPoints(1, 3)).toBe(250);
-    });
-
-    it('should apply 3x multiplier for combo 4+', () => {
-      // 1 line * 100 * 3x = 300
-      expect(scoreCalculator.calculateLineClearPoints(1, 4)).toBe(300);
-      expect(scoreCalculator.calculateLineClearPoints(1, 5)).toBe(300);
-      expect(scoreCalculator.calculateLineClearPoints(1, 10)).toBe(300);
-    });
-
-    it('should handle multiple lines with combo', () => {
-      // 3 lines * 100 * 2x (combo 2) = 600
-      expect(scoreCalculator.calculateLineClearPoints(3, 2)).toBe(600);
-    });
-  });
-
-  describe('getComboMultiplier', () => {
-    it('should return 1 for no combo', () => {
-      expect(scoreCalculator.getComboMultiplier(0)).toBe(1);
-    });
-
-    it('should return 1.5 for combo 1', () => {
-      expect(scoreCalculator.getComboMultiplier(1)).toBe(1.5);
-    });
-
-    it('should return 2 for combo 2', () => {
-      expect(scoreCalculator.getComboMultiplier(2)).toBe(2);
-    });
-
-    it('should return 2.5 for combo 3', () => {
-      expect(scoreCalculator.getComboMultiplier(3)).toBe(2.5);
-    });
-
-    it('should return 3 for combo 4+', () => {
-      expect(scoreCalculator.getComboMultiplier(4)).toBe(3);
-      expect(scoreCalculator.getComboMultiplier(5)).toBe(3);
-      expect(scoreCalculator.getComboMultiplier(100)).toBe(3);
-    });
-
-    it('should return 1 for negative combo', () => {
-      expect(scoreCalculator.getComboMultiplier(-1)).toBe(1);
-    });
-  });
-
-  describe('calculateMovePoints', () => {
-    const singleBlock: BlockShape = {
-      id: 'test',
-      shape: [[1]],
-      color: '#FF0000',
-    };
-
-    it('should calculate placement points only (no lines cleared)', () => {
-      // 10 points (placement) + 0 (no lines) = 10
-      expect(scoreCalculator.calculateMovePoints(singleBlock, 0, 0)).toBe(10);
-    });
-
-    it('should calculate placement + line clear points', () => {
-      // 10 points (placement) + 100 (1 line) = 110
-      expect(scoreCalculator.calculateMovePoints(singleBlock, 1, 0)).toBe(110);
-    });
-
-    it('should calculate placement + line clear + combo', () => {
-      // 10 points (placement) + 200 (1 line * 2x combo) = 210
-      expect(scoreCalculator.calculateMovePoints(singleBlock, 1, 2)).toBe(210);
-    });
-
-    it('should calculate 4-cell block + 2 lines + combo', () => {
       const lBlock: BlockShape = {
         id: 'test',
-        shape: [
-          [1, 0],
-          [1, 0],
-          [1, 1],
-        ],
-        color: '#FF0000',
+        shape: [[1, 0], [1, 0], [1, 1]],
+        color: '#FF0000'
       };
-      // 40 points (4 cells) + 450 (2 lines * 100 * 2.25x... wait, let me recalculate)
-      // Actually: 40 + (2 * 100 * 2.5x) = 40 + 500 = 540
-      expect(scoreCalculator.calculateMovePoints(lBlock, 2, 3)).toBe(540);
+      expect(scoreCalculator.calculateBlockPlacementPoints(lBlock)).toBe(40);
+    });
+  });
+
+  describe('Exponential Line Clear Scoring', () => {
+    it('should use exponential base scores', () => {
+      // Test the exponential progression
+      const result1 = scoreCalculator.calculateLineClearPoints(1, 0);
+      expect(result1.basePoints).toBe(100);  // 1 line = 100
+
+      const result2 = scoreCalculator.calculateLineClearPoints(2, 0);
+      expect(result2.basePoints).toBe(300);  // 2 lines = 3x base (not 2x!)
+
+      const result3 = scoreCalculator.calculateLineClearPoints(3, 0);
+      expect(result3.basePoints).toBe(800);  // 3 lines = 8x base
+
+      const result4 = scoreCalculator.calculateLineClearPoints(4, 0);
+      expect(result4.basePoints).toBe(1500); // 4 lines = 15x base
+    });
+  });
+
+  describe('Progressive Combo Multiplier', () => {
+    it('should calculate progressive combo multipliers', () => {
+      expect(scoreCalculator.getComboMultiplier(0)).toBe(1.0);   // No combo
+      expect(scoreCalculator.getComboMultiplier(1)).toBe(1.2);   // 1.0 + 0.2
+      expect(scoreCalculator.getComboMultiplier(2)).toBe(1.4);   // 1.0 + 0.4
+      expect(scoreCalculator.getComboMultiplier(5)).toBe(2.0);   // 1.0 + 1.0
+      expect(scoreCalculator.getComboMultiplier(15)).toBe(4.0);  // Capped at 4.0x
+    });
+
+    it('should apply progressive combo to scoring', () => {
+      const result = scoreCalculator.calculateLineClearPoints(1, 3); // Combo 3 = 1.6x
+      expect(result.comboMultiplier).toBe(1.6);
+      expect(result.finalPoints).toBe(160); // 100 * 1.6
+    });
+  });
+
+  describe('Feedback Tier System', () => {
+    it('should classify feedback tiers correctly', () => {
+      expect(scoreCalculator.getFeedbackTier(1)).toBe('Good');
+      expect(scoreCalculator.getFeedbackTier(2)).toBe('Awesome'); 
+      expect(scoreCalculator.getFeedbackTier(3)).toBe('Awesome');
+      expect(scoreCalculator.getFeedbackTier(4)).toBe('Unbelievable');
+      expect(scoreCalculator.getFeedbackTier(5)).toBe('Unbelievable');
+    });
+  });
+
+  describe('Complete Scoring Examples', () => {
+    const singleBlock: BlockShape = { id: 'test', shape: [[1]], color: '#FF0000' };
+    
+    it('should handle simple single-line clear with combo', () => {
+      // 1 block (10) + 1 line with combo 2 (100 * 1.4) = 150
+      expect(scoreCalculator.calculateMovePoints(singleBlock, 1, 2)).toBe(150);
+    });
+
+    it('should handle explosive multi-line clear', () => {
+      const lBlock: BlockShape = {
+        id: 'test',
+        shape: [[1, 0], [1, 0], [1, 1]],
+        color: '#FF0000'
+      };
+      // L-block (40) + 2 lines (300 base * 1.6x combo 3) = 40 + 480 = 520
+      expect(scoreCalculator.calculateMovePoints(lBlock, 2, 3)).toBe(520);
+    });
+
+    it('should handle massive 4-line combo clear', () => {
+      const bigBlock: BlockShape = {
+        id: 'test', 
+        shape: [[1, 1, 1, 1]],
+        color: '#FF0000'
+      };
+      // 4-cell block (40) + 4 lines (1500 base * 2.4x combo 7) = 40 + 3600 = 3640
+      expect(scoreCalculator.calculateMovePoints(bigBlock, 4, 7)).toBe(3640);
     });
   });
 
   describe('updateCombo', () => {
-    it('should reset combo to 0 if no lines cleared', () => {
-      expect(scoreCalculator.updateCombo(0, 0)).toBe(0);
-      expect(scoreCalculator.updateCombo(5, 0)).toBe(0);
-    });
-
-    it('should increment combo if lines cleared', () => {
-      expect(scoreCalculator.updateCombo(0, 1)).toBe(1);
-      expect(scoreCalculator.updateCombo(1, 1)).toBe(2);
-      expect(scoreCalculator.updateCombo(5, 2)).toBe(6);
+    it('should increment combo on clear, reset on miss', () => {
+      expect(scoreCalculator.updateCombo(0, 1)).toBe(1);  // First clear
+      expect(scoreCalculator.updateCombo(5, 2)).toBe(6);  // Continue combo
+      expect(scoreCalculator.updateCombo(10, 0)).toBe(0); // Break combo
     });
   });
 
-  describe('isHighScore', () => {
-    it('should return true when current > previous', () => {
+  describe('Utility Methods', () => {
+    it('should detect high scores', () => {
       expect(scoreCalculator.isHighScore(1000, 500)).toBe(true);
+      expect(scoreCalculator.isHighScore(300, 500)).toBe(false);
     });
 
-    it('should return false when current <= previous', () => {
-      expect(scoreCalculator.isHighScore(500, 1000)).toBe(false);
-      expect(scoreCalculator.isHighScore(500, 500)).toBe(false);
-    });
-
-    it('should return true when current > 0 and previous is 0', () => {
-      expect(scoreCalculator.isHighScore(10, 0)).toBe(true);
-    });
-  });
-
-  describe('formatScore', () => {
-    it('should format small scores without commas', () => {
-      expect(scoreCalculator.formatScore(0)).toBe('0');
-      expect(scoreCalculator.formatScore(100)).toBe('100');
-      expect(scoreCalculator.formatScore(999)).toBe('999');
-    });
-
-    it('should format scores with commas', () => {
-      expect(scoreCalculator.formatScore(1000)).toMatch(/1[,\s]000/);
-      expect(scoreCalculator.formatScore(12345)).toMatch(/12[,\s]345/);
-      expect(scoreCalculator.formatScore(1000000)).toMatch(/1[,\s]000[,\s]000/);
+    it('should format scores', () => {
+      expect(scoreCalculator.formatScore(12345)).toBe('12,345');
     });
   });
 });

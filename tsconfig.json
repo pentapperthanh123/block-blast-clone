@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "commonjs",
-    "lib": ["es2019"],
+    "lib": ["es2019", "DOM"],
     "jsx": "react-native",
     "strict": true,
     "esModuleInterop": true,
@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "types": ["jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
@@ -18,7 +19,6 @@
       "@engine/*": ["src/engine/*"],
       "@state/*": ["src/state/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@types/*": ["src/types/*"],
       "@utils/*": ["src/utils/*"],
       "@constants/*": ["src/constants/*"]
     }

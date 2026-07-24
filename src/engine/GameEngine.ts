@@ -9,11 +9,11 @@
  * - ScoreCalculator for scoring
  */
 
-import { GameState, BlockShape, Position, Grid } from '../types';
+import { GameState, BlockShape, Position, Grid, MoveResult, CellState } from '../types';
 import { GridManager } from './GridManager';
 import { LineDetector } from './LineDetector';
 import { BlockGenerator } from './BlockGenerator';
-import { ScoreCalculator } from './ScoreCalculator';
+import { ScoreCalculator, type ScoreBreakdown } from './ScoreCalculator';
 
 export class GameEngine {
   constructor(
@@ -38,76 +38,95 @@ export class GameEngine {
   }
 
   /**
-   * Place a block on the grid and process the move
-   * 
-   * @returns New game state after placement and line clearing
+   * Place a block and return full move data (for UI FX).
    */
-  placeBlock(state: GameState, block: BlockShape, position: Position): GameState {
-    // 1. Check if placement is valid
+  executeMove(state: GameState, block: BlockShape, position: Position): MoveResult {
     if (!this.gridManager.canPlaceBlock(state.grid, block, position)) {
       throw new Error('Invalid block placement');
     }
 
-    // 2. Place the block
-    let newGrid = this.gridManager.placeBlock(state.grid, block, position);
-
-    // 3. Calculate placement points
+    const gridAfterPlace = this.gridManager.placeBlock(state.grid, block, position);
+    const placedPositions = this.getPlacedPositions(block, position);
     const placementPoints = this.scoreCalculator.calculateBlockPlacementPoints(block);
 
-    // 4. Detect and clear lines
-    const detectedLines = this.lineDetector.detectLines(newGrid);
+    const detectedLines = this.lineDetector.detectLines(gridAfterPlace);
     const hasLines = this.lineDetector.hasLines(detectedLines);
 
+    let finalGrid = gridAfterPlace;
     let lineClearPoints = 0;
     let newCombo = state.combo;
+    let scoreBreakdown: ScoreBreakdown | undefined;
 
     if (hasLines) {
-      // Clear the lines
-      newGrid = this.lineDetector.clearLines(newGrid, detectedLines);
-
-      // Calculate line clear points with combo
+      finalGrid = this.lineDetector.clearLines(gridAfterPlace, detectedLines);
       const linesCount = this.lineDetector.countLines(detectedLines);
-      lineClearPoints = this.scoreCalculator.calculateLineClearPoints(
-        linesCount,
-        newCombo
-      );
-
-      // Update combo
+      scoreBreakdown = this.scoreCalculator.calculateLineClearPoints(linesCount, newCombo);
+      lineClearPoints = scoreBreakdown.finalPoints;
       newCombo = this.scoreCalculator.updateCombo(newCombo, linesCount);
     } else {
-      // No lines cleared, reset combo
       newCombo = 0;
     }
 
-    // 5. Calculate total score
-    const totalPoints = placementPoints + lineClearPoints;
-    const newScore = state.score + totalPoints;
-
-    // 6. Update high score if needed
+    const newScore = state.score + placementPoints + lineClearPoints;
     const newHighScore = this.scoreCalculator.isHighScore(newScore, state.highScore)
       ? newScore
       : state.highScore;
 
-    // 7. Remove used block from current pieces
-    const newCurrentPieces = state.currentPieces.filter((p) => p.id !== block.id);
+    const newCurrentPieces = state.currentPieces.map((p) =>
+      p && p.id === block.id ? null : p
+    );
+    const allSlotsEmpty = newCurrentPieces.every((p) => p === null);
+    const finalCurrentPieces = allSlotsEmpty
+      ? this.blockGenerator.generateBlockSet(3)
+      : newCurrentPieces;
 
-    // 8. Generate new blocks if all used
-    const finalCurrentPieces =
-      newCurrentPieces.length === 0
-        ? this.blockGenerator.generateBlockSet(3)
-        : newCurrentPieces;
-
-    // 9. Check for game over
-    const isGameOver = this.checkGameOver(newGrid, finalCurrentPieces);
+    const activePieces = finalCurrentPieces.filter(
+      (p): p is BlockShape => p !== null
+    );
+    const isGameOver = this.checkGameOver(finalGrid, activePieces);
 
     return {
-      grid: newGrid,
-      score: newScore,
-      highScore: newHighScore,
-      currentPieces: finalCurrentPieces,
-      isGameOver,
-      combo: newCombo,
+      state: {
+        grid: finalGrid,
+        score: newScore,
+        highScore: newHighScore,
+        currentPieces: finalCurrentPieces,
+        isGameOver,
+        combo: newCombo,
+      },
+      gridAfterPlace,
+      placedPositions,
+      clearedRows: detectedLines.rows,
+      clearedColumns: detectedLines.columns,
+      pointsFromPlacement: placementPoints,
+      pointsFromClear: lineClearPoints,
+      scoreBreakdown,
     };
+  }
+
+  /**
+   * Place a block on the grid and process the move
+   *
+   * @returns New game state after placement and line clearing
+   */
+  placeBlock(state: GameState, block: BlockShape, position: Position): GameState {
+    return this.executeMove(state, block, position).state;
+  }
+
+  canPlaceBlock(grid: Grid, block: BlockShape, position: Position): boolean {
+    return this.gridManager.canPlaceBlock(grid, block, position);
+  }
+
+  private getPlacedPositions(block: BlockShape, position: Position): Position[] {
+    const positions: Position[] = [];
+    for (let r = 0; r < block.shape.length; r++) {
+      for (let c = 0; c < block.shape[r].length; c++) {
+        if (block.shape[r][c] === CellState.Filled || block.shape[r][c] === 1) {
+          positions.push({ row: position.row + r, col: position.col + c });
+        }
+      }
+    }
+    return positions;
   }
 
   /**

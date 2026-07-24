@@ -35,10 +35,15 @@ export interface GameState {
   grid: Grid;
   score: number;
   highScore: number;
-  currentPieces: BlockShape[];
+  currentPieces: (BlockShape | null)[];
   isGameOver: boolean;
   combo: number;
 }
+
+/** Parallel color map for filled cells (null = empty) */
+export type ColorGrid = (string | null)[][];
+
+export type AppRoute = 'loading' | 'home' | 'classic';
 
 // Action Types
 export interface PlaceBlockAction {
@@ -51,4 +56,21 @@ export interface ClearLinesResult {
   clearedColumns: number[];
   pointsEarned: number;
   newCombo: number;
+}
+
+/** Full move payload for UI animations */
+export interface MoveResult {
+  state: GameState;
+  gridAfterPlace: Grid;
+  placedPositions: Position[];
+  clearedRows: number[];
+  clearedColumns: number[];
+  pointsFromPlacement: number;
+  pointsFromClear: number;
+  scoreBreakdown?: {
+    basePoints: number;
+    comboMultiplier: number;
+    finalPoints: number;
+    feedbackTier: 'Good' | 'Awesome' | 'Unbelievable';
+  };
 }

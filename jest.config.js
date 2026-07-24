@@ -16,7 +16,6 @@ module.exports = {
     '^@engine/(.*)$': '<rootDir>/src/engine/$1',
     '^@state/(.*)$': '<rootDir>/src/state/$1',
     '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
-    '^@types/(.*)$': '<rootDir>/src/types/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@constants/(.*)$': '<rootDir>/src/constants/$1',
   },

@@ -63,7 +63,9 @@ export const BlockPicker: React.FC = () => {
     placeBlock(block, { row: 0, col: 0 });
   };
 
-  if (currentPieces.length === 0) {
+  const pieces = currentPieces.filter((p): p is BlockShape => p !== null);
+
+  if (pieces.length === 0) {
     return (
       <View style={styles.container}>
         <Text style={styles.emptyText}>No blocks available</Text>
@@ -73,7 +75,7 @@ export const BlockPicker: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {currentPieces.map((block) => (
+      {pieces.map((block) => (
         <BlockPreview
           key={block.id}
           block={block}

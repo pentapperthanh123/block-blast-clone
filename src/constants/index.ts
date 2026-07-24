@@ -1,45 +1,59 @@
 /**
- * Game Constants
- * Clean Architecture - Configuration Layer
+ * Updated constants for enhanced scoring system
  */
 
-// Grid Configuration
 export const GRID_SIZE = 8;
-export const CELL_SIZE = 40; // pixels per cell
+export const CELL_SIZE = 40;
 
-// Scoring
-export const POINTS_PER_BLOCK = 10; // Points per cell placed
-export const POINTS_PER_LINE = 100;
-export const COMBO_MULTIPLIER = 1.5;
+// Updated scoring constants for exponential system
+export const POINTS_PER_BLOCK = 10;
+export const BASE_LINE_POINTS = 100;
 
-// Colors (từ reference images)
-export const BLOCK_COLORS = {
-  PURPLE: '#B565D8',
-  CYAN: '#4DD3E8',
-  ORANGE: '#FF8C42',
-  YELLOW: '#FFD93D',
-  GREEN: '#6BCF7F',
-  RED: '#FF6B6B',
-  BLUE: '#5B7CFF',
+// Feedback tier thresholds
+export const SCORE_TIERS = {
+  GOOD: 1,        // 1 line cleared
+  AWESOME: 2,     // 2+ lines cleared  
+  UNBELIEVABLE: 4 // 4+ lines cleared
 } as const;
 
-// Block colors as array (for random selection)
+export const BLOCK_COLORS = {
+  PURPLE: '#A855F7', // Vivid Purple
+  CYAN: '#06B6D4',   // Bright Cyan
+  ORANGE: '#F97316', // Electric Orange
+  YELLOW: '#EAB308', // Vivid Gold
+  GREEN: '#22C55E',  // Fresh Emerald
+  RED: '#EF4444',    // Bright Ruby
+  BLUE: '#3B82F6',   // Electric Blue
+} as const;
+
 export const BLOCK_COLORS_ARRAY = Object.values(BLOCK_COLORS);
 
-// UI Colors
 export const UI_COLORS = {
-  BACKGROUND: '#2E3C8F',
-  GRID_BACKGROUND: '#1E2870',
+  BACKGROUND: '#2563EB',
+  BACKGROUND_DEEP: '#1E40AF',
+  GRID_BACKGROUND: '#101B4B',
+  GRID_CELL: '#1B2B6B',
   TEXT_PRIMARY: '#FFFFFF',
-  TEXT_SCORE: '#FFD93D',
+  TEXT_SCORE: '#FACC15',
+  GHOST: 'rgba(255,255,255,0.85)',
+  ADVENTURE: '#F97316',
+  CLASSIC: '#10B981',
+  MORE_GAMES: '#EC4899',
 } as const;
 
-// Animation Durations (ms)
 export const ANIMATION = {
-  BLOCK_PLACE: 200,
-  LINE_CLEAR: 400,
+  BLOCK_PLACE: 220,
+  LINE_CLEAR: 420,
   COMBO_TEXT: 800,
+  SCORE_POPUP: 1100,
+  LOADING_MS: 1800,
 } as const;
 
-// Piece Configuration
 export const MAX_ACTIVE_PIECES = 3;
+
+export const MOOD_TEXTS = ['Interesting!', 'Relaxing!', 'Addictive!'] as const;
+
+export const HOME_TITLE = {
+  LINE1: 'BLOCK BLAST',
+  LINE2: 'ADVENTURE MASTER',
+} as const;

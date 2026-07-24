@@ -1,54 +1,58 @@
 /**
- * GameScreen - Main Game Screen
- * Presentation Layer - Clean Architecture
+ * GameScreen — Classic mode gameplay
  */
 
-import React, { useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  Dimensions,
-} from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, StyleSheet, StatusBar } from 'react-native';
 import { useGameStore } from '../store/gameStore';
-import { ScoreDisplay } from '../components/ui/ScoreDisplay';
-import { GridCanvas } from '../components/game/GridCanvas';
-import { BlockPicker } from '../components/game/BlockPicker';
+import { GameHeader } from '../components/ui/GameHeader';
+import { MoodFooter } from '../components/ui/MoodFooter';
 import { GameOverModal } from '../components/ui/GameOverModal';
+import { GameBoard, type BoardLayout } from '../components/game/GameBoard';
+import { BlockTray } from '../components/game/BlockTray';
+import { ClearBurst } from '../components/game/ClearBurst';
+import { ScorePopup } from '../components/game/ScorePopup';
 import { UI_COLORS } from '../constants';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 export const GameScreen: React.FC = () => {
-  const { initGame, isGameOver } = useGameStore();
+  const isGameOver = useGameStore((s) => s.isGameOver);
+  const clearingRows = useGameStore((s) => s.clearingRows);
+  const clearingColumns = useGameStore((s) => s.clearingColumns);
+  const lastScoreBreakdown = useGameStore((s) => s.lastScoreBreakdown);
+  const [boardLayout, setBoardLayout] = useState<BoardLayout | null>(null);
 
-  useEffect(() => {
-    initGame();
-  }, [initGame]);
+  const onBoardLayout = useCallback((layout: BoardLayout) => {
+    setBoardLayout(layout);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={UI_COLORS.BACKGROUND} />
 
-      <View style={styles.content}>
-        {/* Header with score */}
-        <ScoreDisplay />
+      <GameHeader />
 
-        {/* Main game grid */}
-        <View style={styles.gridContainer}>
-          <GridCanvas />
-        </View>
-
-        {/* Block picker at bottom */}
-        <View style={styles.pickerContainer}>
-          <BlockPicker />
+      <View style={styles.boardWrap}>
+        <View style={styles.boardStack}>
+          <GameBoard onBoardLayout={onBoardLayout} />
+          <ClearBurst />
+          {lastScoreBreakdown && (
+            <ScorePopup
+              points={lastScoreBreakdown.points}
+              feedbackTier={lastScoreBreakdown.feedbackTier}
+              comboMultiplier={lastScoreBreakdown.comboMultiplier}
+              clearingRows={clearingRows}
+              clearingColumns={clearingColumns}
+              active={clearingRows.length > 0 || clearingColumns.length > 0}
+            />
+          )}
         </View>
       </View>
 
-      {/* Game over modal */}
+      <BlockTray boardLayout={boardLayout} />
+      <MoodFooter />
+
       {isGameOver && <GameOverModal />}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -56,21 +60,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: UI_COLORS.BACKGROUND,
+    overflow: 'hidden',
+    paddingBottom: 12,
   },
-  content: {
+  boardWrap: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-  },
-  gridContainer: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    width: SCREEN_WIDTH,
   },
-  pickerContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+  boardStack: {
+    position: 'relative',
   },
 });

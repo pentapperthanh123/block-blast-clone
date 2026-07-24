@@ -1,76 +1,110 @@
 /**
- * ScoreCalculator - Calculate points and combos
- * Business Logic Layer - Clean Architecture
+ * Enhanced ScoreCalculator - Dynamic scoring with exponential multi-line bonus
+ * and progressive combo multipliers following the 4-algorithm spec
  */
 
 import { BlockShape } from '../types';
-import { POINTS_PER_BLOCK } from '../constants';
+
+export interface ScoreBreakdown {
+  basePoints: number;
+  comboMultiplier: number;
+  finalPoints: number;
+  feedbackTier: 'Good' | 'Awesome' | 'Unbelievable';
+}
 
 export class ScoreCalculator {
-  // Scoring constants
-  private readonly BLOCK_PLACEMENT_BASE = POINTS_PER_BLOCK; // 10 points per cell
-  private readonly LINE_CLEAR_BASE = 100; // 100 points per line
-  private readonly COMBO_MULTIPLIERS = [1, 1.5, 2, 2.5, 3]; // Combo multipliers
+  // Algorithm 4: Dynamic Scoring Constants
+  private readonly CELL_PLACEMENT_POINTS = 10;
+  
+  // Exponential line clear base scores (not linear!)
+  private readonly LINE_CLEAR_BASES = {
+    1: 100,    // 1 line = 100 base
+    2: 300,    // 2 lines = 3x base (not 2x)
+    3: 800,    // 3 lines = 8x base 
+    4: 1500,   // 4 lines = 15x base
+    5: 2500,   // 5+ lines = 25x base
+  };
 
   /**
-   * Calculate points for placing a block
-   * Base: 10 points per cell
+   * Algorithm 4: Calculate base score with exponential multi-line bonus
+   */
+  calculateBaseClearScore(linesCleared: number): number {
+    if (linesCleared === 0) return 0;
+    if (linesCleared === 1) return this.LINE_CLEAR_BASES[1];
+    if (linesCleared === 2) return this.LINE_CLEAR_BASES[2];
+    if (linesCleared === 3) return this.LINE_CLEAR_BASES[3]; 
+    if (linesCleared === 4) return this.LINE_CLEAR_BASES[4];
+    return this.LINE_CLEAR_BASES[5]; // 5+ lines
+  }
+
+  /**
+   * Algorithm 4: Dynamic combo multiplier (progressive, not fixed tiers)
+   * Formula: 1.0 + (combo * 0.2) up to 4.0x max
+   */
+  getComboMultiplier(currentCombo: number): number {
+    if (currentCombo <= 0) return 1.0;
+    const multiplier = 1.0 + (currentCombo * 0.2);
+    return Math.min(multiplier, 4.0); // Cap at 4x
+  }
+
+  /**
+   * Algorithm 3: Feedback tier based on simultaneous lines cleared
+   */
+  getFeedbackTier(linesCleared: number): 'Good' | 'Awesome' | 'Unbelievable' {
+    if (linesCleared >= 4) return 'Unbelievable';
+    if (linesCleared >= 2) return 'Awesome'; 
+    return 'Good';
+  }
+
+  /**
+   * Calculate points for placing a block (unchanged)
    */
   calculateBlockPlacementPoints(block: BlockShape): number {
     let cellCount = 0;
-
     for (const row of block.shape) {
       for (const cell of row) {
-        if (cell === 1) {
-          cellCount++;
-        }
+        if (cell === 1) cellCount++;
       }
     }
-
-    return cellCount * this.BLOCK_PLACEMENT_BASE;
+    return cellCount * this.CELL_PLACEMENT_POINTS;
   }
 
   /**
-   * Calculate points for clearing lines
-   * 
-   * @param linesCleared - Number of lines cleared (rows + columns)
-   * @param currentCombo - Current combo count (0-indexed)
-   * @returns Points earned
+   * Algorithm 4: Complete scoring with breakdown
    */
-  calculateLineClearPoints(linesCleared: number, currentCombo: number = 0): number {
-    if (linesCleared === 0) {
-      return 0;
-    }
+  calculateLineClearPoints(
+    linesCleared: number, 
+    currentCombo: number = 0
+  ): ScoreBreakdown {
+    const basePoints = this.calculateBaseClearScore(linesCleared);
+    const comboMultiplier = this.getComboMultiplier(currentCombo);
+    const finalPoints = Math.floor(basePoints * comboMultiplier);
+    const feedbackTier = this.getFeedbackTier(linesCleared);
 
-    const basePoints = linesCleared * this.LINE_CLEAR_BASE;
-    const multiplier = this.getComboMultiplier(currentCombo);
-
-    return Math.floor(basePoints * multiplier);
+    return {
+      basePoints,
+      comboMultiplier,
+      finalPoints,
+      feedbackTier,
+    };
   }
 
   /**
-   * Get combo multiplier based on consecutive clears
-   * 
-   * @param consecutiveClears - Number of consecutive line clears (0-indexed)
-   * @returns Multiplier (1x, 1.5x, 2x, 2.5x, 3x)
+   * Algorithm 3: Update combo (increment on clear, reset on miss)
    */
-  getComboMultiplier(consecutiveClears: number): number {
-    if (consecutiveClears < 0) {
-      return 1;
-    }
-
-    // Cap at max multiplier
-    const index = Math.min(consecutiveClears, this.COMBO_MULTIPLIERS.length - 1);
-    return this.COMBO_MULTIPLIERS[index];
+  updateCombo(currentCombo: number, linesCleared: number): number {
+    return linesCleared > 0 ? currentCombo + 1 : 0;
   }
 
   /**
-   * Calculate total points for a move
-   * 
-   * @param block - Block being placed
-   * @param linesCleared - Number of lines cleared
-   * @param currentCombo - Current combo count
-   * @returns Total points
+   * Legacy method for simple points (backward compatibility)
+   */
+  calculateLineClearPointsSimple(linesCleared: number, currentCombo: number = 0): number {
+    return this.calculateLineClearPoints(linesCleared, currentCombo).finalPoints;
+  }
+
+  /**
+   * Legacy method for tests (backward compatibility)
    */
   calculateMovePoints(
     block: BlockShape,
@@ -78,39 +112,17 @@ export class ScoreCalculator {
     currentCombo: number = 0
   ): number {
     const placementPoints = this.calculateBlockPlacementPoints(block);
-    const lineClearPoints = this.calculateLineClearPoints(linesCleared, currentCombo);
-
-    return placementPoints + lineClearPoints;
+    const clearPoints = this.calculateLineClearPointsSimple(linesCleared, currentCombo);
+    return placementPoints + clearPoints;
   }
 
-  /**
-   * Update combo count after a move
-   * 
-   * @param currentCombo - Current combo count
-   * @param linesCleared - Number of lines cleared
-   * @returns New combo count (increments if lines cleared, resets if not)
-   */
-  updateCombo(currentCombo: number, linesCleared: number): number {
-    if (linesCleared > 0) {
-      return currentCombo + 1; // Increment combo
-    }
-    return 0; // Reset combo
-  }
-
-  /**
-   * Check if new score is a high score
-   */
   isHighScore(currentScore: number, previousHighScore: number): boolean {
     return currentScore > previousHighScore;
   }
 
-  /**
-   * Format score with commas (for display)
-   */
   formatScore(score: number): string {
     return score.toLocaleString();
   }
 }
 
-// Export singleton instance
 export const scoreCalculator = new ScoreCalculator();

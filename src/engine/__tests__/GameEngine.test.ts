@@ -49,7 +49,7 @@ describe('GameEngine', () => {
 
     it('should generate 3 unique blocks', () => {
       const state = gameEngine.initializeGame();
-      const ids = state.currentPieces.map((b) => b.id);
+      const ids = state.currentPieces.map((b) => b!.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(3);
     });
@@ -67,7 +67,7 @@ describe('GameEngine', () => {
       const newState = gameEngine.placeBlock(state, block, { row: 0, col: 0 });
 
       expect(newState.grid[0][0]).toBe(CellState.Filled);
-      expect(newState.score).toBe(10); // 1 cell * 10 points
+      expect(newState.score).toBe(10); // 1 cell * 10 points (no lines cleared)
     });
 
     it('should throw error for invalid placement', () => {
@@ -126,8 +126,8 @@ describe('GameEngine', () => {
 
       const newState = gameEngine.placeBlock(state, block, { row: 0, col: 7 });
 
-      // Score: 10 (placement) + 200 (1 line * 2x multiplier) = 210
-      expect(newState.score).toBe(210);
+      // Score: 10 (placement) + 140 (1 line * combo 2 = 1.4x) = 150
+      expect(newState.score).toBe(150);
       // Combo should increment to 3
       expect(newState.combo).toBe(3);
     });
@@ -150,26 +150,42 @@ describe('GameEngine', () => {
 
     it('should remove used block from currentPieces', () => {
       const state = gameEngine.initializeGame();
-      const block = state.currentPieces[0];
+      const block = state.currentPieces[0]!;
 
       const newState = gameEngine.placeBlock(state, block, { row: 0, col: 0 });
 
-      expect(newState.currentPieces).toHaveLength(2);
-      expect(newState.currentPieces.find((b) => b.id === block.id)).toBeUndefined();
+      // Fixed 3 slots: used slot becomes null (no re-order)
+      expect(newState.currentPieces).toHaveLength(3);
+      expect(newState.currentPieces[0]).toBeNull();
+      expect(newState.currentPieces.filter(Boolean)).toHaveLength(2);
+      expect(newState.currentPieces.find((b) => b?.id === block.id)).toBeUndefined();
     });
 
     it('should generate new blocks when all used', () => {
       const state = gameEngine.initializeGame();
+      // Force three 1x1 pieces so placements never collide / go OOB
+      state.currentPieces = [
+        { id: 'a', shape: [[1]], color: '#FF0000' },
+        { id: 'b', shape: [[1]], color: '#00FF00' },
+        { id: 'c', shape: [[1]], color: '#0000FF' },
+      ];
       let currentState = state;
 
-      // Use all 3 blocks (place at different positions to avoid collision)
       for (let i = 0; i < 3; i++) {
-        const block = currentState.currentPieces[0];
-        currentState = gameEngine.placeBlock(currentState, block, { row: 0, col: i * 2 });
+        const block = currentState.currentPieces.find((p) => p !== null)!;
+        currentState = gameEngine.placeBlock(currentState, block, {
+          row: 0,
+          col: i,
+        });
       }
 
-      // Should generate 3 new blocks
       expect(currentState.currentPieces).toHaveLength(3);
+      expect(currentState.currentPieces.every((p) => p !== null)).toBe(true);
+      expect(currentState.currentPieces.map((p) => p!.id)).not.toEqual([
+        'a',
+        'b',
+        'c',
+      ]);
     });
 
     it('should update high score', () => {
