@@ -6,6 +6,8 @@
 
 Clone của game mobile "Block Blast" được xây dựng với **React Native**, **TypeScript**, và **React Native Skia** theo kiến trúc **Clean Architecture**.
 
+> **Status:** 🚧 Đang phát triển - Infrastructure setup hoàn tất, đang implement game engine
+
 ![Block Blast Gameplay](https://via.placeholder.com/800x400/2E3C8F/FFFFFF?text=Block+Blast+Clone)
 
 ---
