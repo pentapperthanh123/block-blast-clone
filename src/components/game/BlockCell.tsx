@@ -1,9 +1,12 @@
 /**
- * BlockCell — 3D Glossy/Bevel block cell component
+ * BlockCell — theme skin fills the cell. Memo-friendly: no inline style objects
+ * passed to ThemeIcon; no store; ghost is a flat View (no SVG).
  */
 
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import { ThemeIcon } from '../ui/ThemeIcon';
+import { BOARD_CONSTANTS } from '../../constants';
 
 interface BlockCellProps {
   size: number;
@@ -12,40 +15,64 @@ interface BlockCellProps {
   isEmpty?: boolean;
   isGhost?: boolean;
   isValidGhost?: boolean;
+  ghostColor?: string;
+  skinSource: string;
+  skinMode?: 'replace' | 'overlay';
+  elevated?: boolean;
   style?: ViewStyle | ViewStyle[];
 }
 
-export const BlockCell: React.FC<BlockCellProps> = ({
+function blockCellPropsEqual(
+  prev: Readonly<BlockCellProps>,
+  next: Readonly<BlockCellProps>,
+): boolean {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.borderRadius === next.borderRadius &&
+    prev.isEmpty === next.isEmpty &&
+    prev.isGhost === next.isGhost &&
+    prev.isValidGhost === next.isValidGhost &&
+    prev.ghostColor === next.ghostColor &&
+    prev.skinSource === next.skinSource &&
+    prev.skinMode === next.skinMode &&
+    prev.elevated === next.elevated &&
+    prev.style === next.style
+  );
+}
+
+export const BlockCell: React.FC<BlockCellProps> = React.memo(({
   size,
   color,
   borderRadius,
   isEmpty = false,
   isGhost = false,
   isValidGhost = true,
+  ghostColor,
+  skinSource,
+  skinMode = 'overlay',
+  elevated = false,
   style,
 }) => {
-  const radius = borderRadius ?? Math.max(4, size * 0.16);
-  const borderWidth = Math.max(1.5, Math.floor(size * 0.09));
+  const radius =
+    borderRadius ??
+    Math.max(BOARD_CONSTANTS.MIN_RADIUS, size * BOARD_CONSTANTS.CELL_RADIUS_RATIO);
+  const fillColor = isGhost ? (ghostColor ?? color) : color;
 
-  if (isEmpty) {
+  if (isEmpty && !isGhost) {
     return (
       <View
         style={[
           styles.emptyCell,
-          {
-            width: size,
-            height: size,
-            borderRadius: radius,
-          },
+          { width: size, height: size, borderRadius: radius },
           style,
         ]}
       />
     );
   }
 
-  if (isGhost) {
-    const ghostBg = isValidGhost ? 'rgba(255,255,255,0.45)' : 'rgba(239,68,68,0.35)';
-    const ghostBorder = isValidGhost ? 'rgba(255,255,255,0.8)' : 'rgba(239,68,68,0.7)';
+  // Flat scout — no SVG (keeps ThemeIcon memo stable on the board)
+  if (isGhost && isValidGhost) {
     return (
       <View
         style={[
@@ -54,8 +81,7 @@ export const BlockCell: React.FC<BlockCellProps> = ({
             width: size,
             height: size,
             borderRadius: radius,
-            backgroundColor: ghostBg,
-            borderColor: ghostBorder,
+            backgroundColor: fillColor,
           },
           style,
         ]}
@@ -63,7 +89,7 @@ export const BlockCell: React.FC<BlockCellProps> = ({
     );
   }
 
-  return (
+  const activeContent = (
     <View
       style={[
         styles.activeCell,
@@ -71,48 +97,64 @@ export const BlockCell: React.FC<BlockCellProps> = ({
           width: size,
           height: size,
           borderRadius: radius,
-          backgroundColor: color,
-          borderWidth,
-          borderTopColor: 'rgba(255,255,255,0.5)',
-          borderLeftColor: 'rgba(255,255,255,0.4)',
-          borderBottomColor: 'rgba(0,0,0,0.35)',
-          borderRightColor: 'rgba(0,0,0,0.25)',
+          backgroundColor:
+            skinMode === 'replace' ? 'transparent' : fillColor,
         },
         style,
       ]}
     >
-      {/* Top glossy inner glare overlay */}
+      <View style={styles.skinLayer}>
+        <ThemeIcon source={skinSource} size={size} />
+      </View>
       <View
+        pointerEvents="none"
         style={[
           styles.glossyGlare,
           {
-            borderTopLeftRadius: Math.max(2, radius - borderWidth),
-            borderTopRightRadius: Math.max(2, radius - borderWidth),
+            borderTopLeftRadius: radius,
+            borderTopRightRadius: radius,
           },
         ]}
       />
     </View>
   );
-};
+
+  if (elevated) {
+    return (
+      <View
+        style={[
+          { width: size, height: size, borderRadius: radius },
+          styles.elevatedShadow,
+        ]}
+      >
+        {activeContent}
+      </View>
+    );
+  }
+
+  return activeContent;
+}, blockCellPropsEqual);
 
 const styles = StyleSheet.create({
   emptyCell: {
-    backgroundColor: '#1E2A66',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(30, 42, 102, 0.85)',
   },
   ghostCell: {
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
+    opacity: BOARD_CONSTANTS.GHOST_OPACITY,
   },
   activeCell: {
     position: 'relative',
     overflow: 'hidden',
+  },
+  skinLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  elevatedShadow: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   glossyGlare: {
     position: 'absolute',

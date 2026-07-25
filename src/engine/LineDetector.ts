@@ -3,7 +3,7 @@
  * Business Logic Layer - Clean Architecture
  */
 
-import { Grid, CellState } from '../types';
+import { Grid, CellState, Position } from '../types';
 import { GRID_SIZE } from '../constants';
 
 export interface DetectedLines {
@@ -13,21 +13,30 @@ export interface DetectedLines {
 
 export class LineDetector {
   /**
-   * Detect all completed rows and columns
+   * Detect all completed rows and columns.
+   * If placedPositions is provided, it performs a targeted scan only on affected lines.
    */
-  detectLines(grid: Grid): DetectedLines {
+  detectLines(grid: Grid, placedPositions?: Position[]): DetectedLines {
     const completedRows: number[] = [];
     const completedColumns: number[] = [];
 
+    const rowsToCheck = placedPositions
+      ? Array.from(new Set(placedPositions.map((p) => p.row)))
+      : Array.from({ length: GRID_SIZE }, (_, i) => i);
+
+    const colsToCheck = placedPositions
+      ? Array.from(new Set(placedPositions.map((p) => p.col)))
+      : Array.from({ length: GRID_SIZE }, (_, i) => i);
+
     // Check rows
-    for (let row = 0; row < GRID_SIZE; row++) {
+    for (const row of rowsToCheck) {
       if (this.isRowComplete(grid, row)) {
         completedRows.push(row);
       }
     }
 
     // Check columns
-    for (let col = 0; col < GRID_SIZE; col++) {
+    for (const col of colsToCheck) {
       if (this.isColumnComplete(grid, col)) {
         completedColumns.push(col);
       }

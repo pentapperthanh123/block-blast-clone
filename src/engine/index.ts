@@ -7,4 +7,5 @@ export * from './GridManager';
 export * from './LineDetector';
 export * from './BlockGenerator';
 export * from './ScoreCalculator';
+export * from './DangerDetector';
 export * from './GameEngine';

@@ -3,6 +3,8 @@
  * Clean Architecture - Domain Layer
  */
 
+import type { ThemeName } from '../constants/themes';
+
 // Cell State Enum
 export enum CellState {
   Empty = 0,
@@ -38,12 +40,28 @@ export interface GameState {
   currentPieces: (BlockShape | null)[];
   isGameOver: boolean;
   combo: number;
+  /** Placements since last line clear — drives dry-spell spawn relief */
+  movesWithoutClear: number;
 }
 
 /** Parallel color map for filled cells (null = empty) */
 export type ColorGrid = (string | null)[][];
 
 export type AppRoute = 'loading' | 'home' | 'classic';
+
+export type NewRoundPhase = 'idle' | 'recap' | 'falling' | 'revealing';
+
+export interface LastGameOverResult {
+  score: number;
+  highScore: number;
+  isNewHighScore: boolean;
+  /** Losing board so recap/fall can replay even after leaving Classic */
+  grid: Grid;
+  cellColors: ColorGrid;
+  currentPieces: (BlockShape | null)[];
+  /** Theme at loss — keeps old skins during recap/fall after theme already changed */
+  theme?: ThemeName;
+}
 
 // Action Types
 export interface PlaceBlockAction {
@@ -56,6 +74,13 @@ export interface ClearLinesResult {
   clearedColumns: number[];
   pointsEarned: number;
   newCombo: number;
+}
+
+/** Floating FX on placed cells (+N or like icons) */
+export interface PlacedCellFx {
+  position: Position;
+  points: number;
+  kind?: 'score' | 'like';
 }
 
 /** Full move payload for UI animations */
@@ -71,6 +96,7 @@ export interface MoveResult {
     basePoints: number;
     comboMultiplier: number;
     finalPoints: number;
-    feedbackTier: 'Good' | 'Awesome' | 'Unbelievable';
+    feedbackTier: 'Good' | 'Perfect' | 'Awesome' | 'Unbelievable';
   };
+  isFullClear?: boolean;
 }

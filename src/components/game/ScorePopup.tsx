@@ -1,79 +1,80 @@
 /**
- * ScorePopup — animated score numbers flying up from cleared lines
+ * ScorePopup — big combo + Good/Perfect/Awesome feedback over the board
  */
 
 import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
-  withSequence,
 } from 'react-native-reanimated';
-import { getBoardMetrics } from '../../utils/boardMetrics';
-import { UI_COLORS } from '../../constants';
+import type { FeedbackTier } from '../../constants';
+import { formatScore } from '../../utils/formatScore';
 
 interface ScorePopupProps {
   points: number;
-  feedbackTier: 'Good' | 'Awesome' | 'Unbelievable';
+  feedbackTier: FeedbackTier;
   comboMultiplier: number;
-  clearingRows: number[];
-  clearingColumns: number[];
+  linesCleared: number;
   active: boolean;
 }
+
+const TIER_COLOR: Record<FeedbackTier, string> = {
+  Good: '#6BCF7F',
+  Perfect: '#38BDF8',
+  Awesome: '#FACC15',
+  Unbelievable: '#FF6B6B',
+};
 
 export const ScorePopup: React.FC<ScorePopupProps> = ({
   points,
   feedbackTier,
-  comboMultiplier,
-  clearingRows,
-  clearingColumns,
+  linesCleared,
   active,
 }) => {
-  const { boardSize, cellSize } = getBoardMetrics();
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const scale = useSharedValue(0.8);
-
-  // Calculate popup position (center of cleared area)
-  const centerRow = clearingRows.length > 0 
-    ? clearingRows.reduce((a, b) => a + b, 0) / clearingRows.length 
-    : 3.5;
-  const centerCol = clearingColumns.length > 0
-    ? clearingColumns.reduce((a, b) => a + b, 0) / clearingColumns.length
-    : 3.5;
-
-  const popupX = centerCol * cellSize;
-  const popupY = centerRow * cellSize;
+  const translateY = useSharedValue(24);
+  const scale = useSharedValue(0.55);
+  const comboScale = useSharedValue(0.35);
 
   useEffect(() => {
     if (!active) {
-      opacity.value = 0;
-      translateY.value = 0;
-      scale.value = 0.8;
+      opacity.value = withTiming(0, { duration: 180 });
       return;
     }
 
-    // Explosive entrance + float up + fade out
-    opacity.value = withSequence(
-      withTiming(1, { duration: 100 }),
-      withDelay(600, withTiming(0, { duration: 400 }))
-    );
-    
-    scale.value = withSequence(
-      withSpring(1.2, { damping: 10 }),
-      withDelay(200, withSpring(1, { damping: 15 }))
-    );
-    
-    translateY.value = withDelay(
-      300, 
-      withTiming(-cellSize * 2, { duration: 700 })
-    );
-  }, [active, opacity, translateY, scale, cellSize]);
+    opacity.value = 0;
+    translateY.value = 48; // ~ start lower (~20% of popup travel)
+    scale.value = 0.55;
+    comboScale.value = 0.35;
 
-  const animStyle = useAnimatedStyle(() => ({
+    opacity.value = withSequence(
+      withTiming(1, { duration: 140, easing: Easing.out(Easing.cubic) }),
+      withDelay(750, withTiming(0, { duration: 320 })),
+    );
+    comboScale.value = withSequence(
+      withSpring(1.25, { damping: 8, stiffness: 160 }),
+      withDelay(180, withSpring(1.05, { damping: 12 })),
+    );
+    scale.value = withDelay(
+      80,
+      withSequence(
+        withSpring(1.12, { damping: 10 }),
+        withDelay(120, withSpring(1, { damping: 14 })),
+      ),
+    );
+    translateY.value = withTiming(-36, {
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [active, feedbackTier, points, opacity, translateY, scale, comboScale]);
+
+  const containerStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [
       { translateY: translateY.value },
@@ -81,70 +82,83 @@ export const ScorePopup: React.FC<ScorePopupProps> = ({
     ],
   }));
 
+  const comboStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: comboScale.value }],
+  }));
+
   if (!active || points <= 0) return null;
 
-  const color = feedbackTier === 'Unbelievable' 
-    ? '#FF6B6B' 
-    : feedbackTier === 'Awesome' 
-    ? '#FFD93D' 
-    : '#4DD3E8';
-
-  const fontSize = feedbackTier === 'Unbelievable' ? 32 : 24;
+  const feedbackColor = TIER_COLOR[feedbackTier];
+  const showCombo = linesCleared >= 2;
 
   return (
-    <Animated.View
-      style={[
-        styles.popup,
-        {
-          left: popupX - 60,
-          top: popupY - 20,
-        },
-        animStyle,
-      ]}
-      pointerEvents="none"
-    >
-      <Animated.Text style={[styles.points, { color, fontSize }]}>
-        +{points.toLocaleString()}
-      </Animated.Text>
-      {comboMultiplier > 1 && (
-        <Animated.Text style={[styles.combo, { color }]}>
-          {comboMultiplier.toFixed(1)}x
-        </Animated.Text>
+    <Animated.View style={[styles.container, containerStyle]} pointerEvents="none">
+      {showCombo && (
+        <Animated.View style={[styles.comboContainer, comboStyle]}>
+          <Animated.Text style={styles.comboLabel}>Combo</Animated.Text>
+          <Animated.Text style={styles.comboNumber}>{linesCleared}</Animated.Text>
+        </Animated.View>
       )}
-      <Animated.Text style={[styles.feedback, { color }]}>
+
+      <Animated.Text style={[styles.feedbackText, { color: feedbackColor }]}>
         {feedbackTier}!
+      </Animated.Text>
+
+      <Animated.Text style={styles.points}>
+        +{formatScore(points)}
       </Animated.Text>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  popup: {
-    position: 'absolute',
+  container: {
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
-    width: 120,
-    zIndex: 10,
+    justifyContent: 'center',
+    zIndex: 20,
+  },
+  comboContainer: {
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  comboLabel: {
+    fontSize: 20,
+    fontWeight: '800',
+    fontStyle: 'italic',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: -1, height: 3 },
+    textShadowRadius: 6,
+    letterSpacing: 1,
+  },
+  comboNumber: {
+    fontSize: 64,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    color: '#FFD700',
+    textShadowColor: '#000',
+    textShadowOffset: { width: -2, height: 5 },
+    textShadowRadius: 10,
+    letterSpacing: -2,
+    lineHeight: 70,
+  },
+  feedbackText: {
+    fontSize: 40,
+    fontWeight: '900',
+    fontStyle: 'italic',
+    textShadowColor: 'rgba(0,0,0,0.65)',
+    textShadowOffset: { width: -1, height: 3 },
+    textShadowRadius: 6,
+    letterSpacing: 1,
   },
   points: {
-    fontWeight: '900',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  combo: {
-    fontSize: 16,
-    fontWeight: '800',
-    marginTop: 2,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  feedback: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '700',
-    marginTop: 2,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    color: '#FFE4A0',
+    marginTop: 6,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
   },
 });

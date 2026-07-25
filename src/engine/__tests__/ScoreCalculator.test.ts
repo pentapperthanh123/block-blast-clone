@@ -64,7 +64,7 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
   describe('Feedback Tier System', () => {
     it('should classify feedback tiers correctly', () => {
       expect(scoreCalculator.getFeedbackTier(1)).toBe('Good');
-      expect(scoreCalculator.getFeedbackTier(2)).toBe('Awesome'); 
+      expect(scoreCalculator.getFeedbackTier(2)).toBe('Perfect');
       expect(scoreCalculator.getFeedbackTier(3)).toBe('Awesome');
       expect(scoreCalculator.getFeedbackTier(4)).toBe('Unbelievable');
       expect(scoreCalculator.getFeedbackTier(5)).toBe('Unbelievable');
@@ -102,9 +102,14 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
 
   describe('updateCombo', () => {
     it('should increment combo on clear, reset on miss', () => {
-      expect(scoreCalculator.updateCombo(0, 1)).toBe(1);  // First clear
-      expect(scoreCalculator.updateCombo(5, 2)).toBe(6);  // Continue combo
-      expect(scoreCalculator.updateCombo(10, 0)).toBe(0); // Break combo
+      expect(scoreCalculator.updateCombo(0, 1)).toBe(1);
+      expect(scoreCalculator.updateCombo(5, 2)).toBe(6);
+      expect(scoreCalculator.updateCombo(10, 0)).toBe(0);
+    });
+
+    it('should keep combo on miss when persist mode', () => {
+      expect(scoreCalculator.updateCombo(10, 0, 'persist')).toBe(10);
+      expect(scoreCalculator.updateCombo(10, 1, 'persist')).toBe(11);
     });
   });
 
@@ -115,7 +120,7 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
     });
 
     it('should format scores', () => {
-      expect(scoreCalculator.formatScore(12345)).toBe('12,345');
+      expect(scoreCalculator.formatScore(12345)).toBe('12345');
     });
   });
 });

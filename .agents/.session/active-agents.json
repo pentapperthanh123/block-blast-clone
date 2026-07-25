@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-07-24T14:27:48.093317+00:00",
+  "stacks": [
+    "react-native",
+    "game"
+  ],
+  "agents": [
+    "orchestrator",
+    "project-planner",
+    "explorer-agent",
+    "debugger",
+    "code-reviewer",
+    "security-auditor",
+    "mobile-developer",
+    "test-engineer",
+    "game-developer"
+  ],
+  "skipped": [
+    "backend-specialist",
+    "database-architect",
+    "devops-engineer",
+    "frontend-specialist",
+    "game-developer",
+    "performance-optimizer",
+    "seo-specialist"
+  ],
+  "pivot_keywords": {
+    "rust": [
+      "rust",
+      "cargo",
+      "tokio",
+      "axum"
+    ],
+    "react-native": [
+      "react native",
+      "expo",
+      "rn ",
+      "mobile app"
+    ],
+    "flutter": [
+      "flutter",
+      "dart",
+      "pubspec"
+    ],
+    "game": [
+      "unity",
+      "godot",
+      "unreal",
+      "bevy",
+      "game"
+    ],
+    "nextjs": [
+      "next.js",
+      "nextjs",
+      "app router"
+    ],
+    "python-api": [
+      "fastapi",
+      "flask",
+      "django",
+      "starlette"
+    ],
+    "go": [
+      "golang",
+      " go ",
+      "gin-gonic",
+      "echo framework"
+    ]
+  }
+}

@@ -10,10 +10,11 @@
  */
 
 import { GameState, BlockShape, Position, Grid, MoveResult, CellState } from '../types';
+import { BlockGenSettings } from '../constants/blockGenSettings';
 import { GridManager } from './GridManager';
 import { LineDetector } from './LineDetector';
 import { BlockGenerator } from './BlockGenerator';
-import { ScoreCalculator, type ScoreBreakdown } from './ScoreCalculator';
+import { ScoreCalculator, type ScoreBreakdown, type ComboMode } from './ScoreCalculator';
 
 export class GameEngine {
   constructor(
@@ -27,6 +28,7 @@ export class GameEngine {
    * Initialize a new game
    */
   initializeGame(): GameState {
+    this.blockGenerator.resetSpawnState();
     return {
       grid: this.gridManager.createEmptyGrid(),
       score: 0,
@@ -34,22 +36,30 @@ export class GameEngine {
       currentPieces: this.blockGenerator.generateBlockSet(3),
       isGameOver: false,
       combo: 0,
+      movesWithoutClear: 0,
     };
   }
 
   /**
    * Place a block and return full move data (for UI FX).
    */
-  executeMove(state: GameState, block: BlockShape, position: Position): MoveResult {
+  executeMove(
+    state: GameState,
+    block: BlockShape,
+    position: Position,
+    options?: { comboMode?: ComboMode; blockGenSettings?: BlockGenSettings },
+  ): MoveResult {
     if (!this.gridManager.canPlaceBlock(state.grid, block, position)) {
       throw new Error('Invalid block placement');
     }
 
+    const comboMode = options?.comboMode ?? 'reset';
     const gridAfterPlace = this.gridManager.placeBlock(state.grid, block, position);
     const placedPositions = this.getPlacedPositions(block, position);
     const placementPoints = this.scoreCalculator.calculateBlockPlacementPoints(block);
 
-    const detectedLines = this.lineDetector.detectLines(gridAfterPlace);
+    // Targeted Scan: Only check rows/cols where the block was just placed
+    const detectedLines = this.lineDetector.detectLines(gridAfterPlace, placedPositions);
     const hasLines = this.lineDetector.hasLines(detectedLines);
 
     let finalGrid = gridAfterPlace;
@@ -62,9 +72,9 @@ export class GameEngine {
       const linesCount = this.lineDetector.countLines(detectedLines);
       scoreBreakdown = this.scoreCalculator.calculateLineClearPoints(linesCount, newCombo);
       lineClearPoints = scoreBreakdown.finalPoints;
-      newCombo = this.scoreCalculator.updateCombo(newCombo, linesCount);
+      newCombo = this.scoreCalculator.updateCombo(newCombo, linesCount, comboMode);
     } else {
-      newCombo = 0;
+      newCombo = this.scoreCalculator.updateCombo(newCombo, 0, comboMode);
     }
 
     const newScore = state.score + placementPoints + lineClearPoints;
@@ -72,18 +82,26 @@ export class GameEngine {
       ? newScore
       : state.highScore;
 
+    const newMovesWithoutClear = hasLines ? 0 : state.movesWithoutClear + 1;
+
     const newCurrentPieces = state.currentPieces.map((p) =>
       p && p.id === block.id ? null : p
     );
     const allSlotsEmpty = newCurrentPieces.every((p) => p === null);
+    const isEmptyGrid = finalGrid.every((row) =>
+      row.every((cell) => cell === CellState.Empty),
+    );
     const finalCurrentPieces = allSlotsEmpty
-      ? this.blockGenerator.generateBlockSet(3)
+      ? this.blockGenerator.generateBlockSet(3, finalGrid, {
+          afterFullClear: isEmptyGrid,
+          afterLineClear: hasLines,
+          movesWithoutClear: newMovesWithoutClear,
+          settings: options?.blockGenSettings,
+        })
       : newCurrentPieces;
 
-    const activePieces = finalCurrentPieces.filter(
-      (p): p is BlockShape => p !== null
-    );
-    const isGameOver = this.checkGameOver(finalGrid, activePieces);
+    // Game-over detection is deferred to the store layer (confirmGameOverIfDeadlocked)
+    // to keep executeMove off the critical render path.
 
     return {
       state: {
@@ -91,8 +109,9 @@ export class GameEngine {
         score: newScore,
         highScore: newHighScore,
         currentPieces: finalCurrentPieces,
-        isGameOver,
+        isGameOver: false,
         combo: newCombo,
+        movesWithoutClear: newMovesWithoutClear,
       },
       gridAfterPlace,
       placedPositions,
@@ -101,6 +120,7 @@ export class GameEngine {
       pointsFromPlacement: placementPoints,
       pointsFromClear: lineClearPoints,
       scoreBreakdown,
+      isFullClear: isEmptyGrid,
     };
   }
 

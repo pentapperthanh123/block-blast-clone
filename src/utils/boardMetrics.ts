@@ -1,31 +1,47 @@
 /**
  * Board metrics — responsive cell size for phone preview
+ * All layout values are snapped to whole pixels to avoid sub-pixel seam lines.
  */
 
 import { Dimensions } from 'react-native';
-import { GRID_SIZE } from '../constants';
+import { BOARD_CONSTANTS, GRID_SIZE } from '../constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export const CELL_PAD = 0.5;
+/** Uniform gap between board cells (px) — 0 = các ô sát nhau */
+export const CELL_GAP = 0;
+
+/** Snap outer board extent to a whole grid multiple (eliminates 1px edge seams) */
+function snapBoardExtent(raw: number): number {
+  const floored = Math.floor(raw);
+  return Math.floor(floored / GRID_SIZE) * GRID_SIZE;
+}
 
 export function getBoardMetrics() {
-  const maxBoard = Math.min(SCREEN_WIDTH - 32, SCREEN_HEIGHT * 0.42, 360);
-  const cellSize = Math.floor(maxBoard / GRID_SIZE);
-  const boardSize = cellSize * GRID_SIZE;
-  
-  // Tray blocks nhỏ hơn board cells (scale ~0.65)
-  const trayCellSize = Math.floor(cellSize * 0.65);
-  /** Max piece footprint in tray */
-  const traySlotSize = trayCellSize * 3.8 + CELL_PAD * 2;
+  const rawMax = Math.min(SCREEN_WIDTH - 32, SCREEN_HEIGHT * 0.42, 360);
+  const boardSize = snapBoardExtent(rawMax);
+  const cellGap = CELL_GAP;
+  const cellVisual = Math.floor((boardSize - (GRID_SIZE - 1) * cellGap) / GRID_SIZE);
+  const cellStep = cellVisual + cellGap;
+  const innerGridSize = GRID_SIZE * cellVisual + (GRID_SIZE - 1) * cellGap;
+
+  const pad = BOARD_CONSTANTS.BORDER_PAD;
+  const frameSize = innerGridSize + pad * 2;
+
+  const trayCellSize = Math.floor(cellVisual * 0.58);
+  const traySlotSize = trayCellSize * 3.5;
 
   return {
-    cellSize,
-    boardSize,
+    cellSize: cellStep,
+    cellStep,
+    cellVisual,
+    cellGap,
+    boardSize: innerGridSize,
+    frameSize,
     traySlotSize,
-    cellVisualSize: cellSize - CELL_PAD * 2,
+    cellVisualSize: cellVisual,
     trayCellSize,
-    trayCellVisualSize: trayCellSize - CELL_PAD * 2,
+    trayCellVisualSize: trayCellSize,
     screenWidth: SCREEN_WIDTH,
     screenHeight: SCREEN_HEIGHT,
   };

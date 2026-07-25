@@ -2,7 +2,7 @@
  * App navigation store — Loading → Home → Classic
  */
 
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import type { AppRoute } from '../types';
 
 interface AppStore {
@@ -14,7 +14,7 @@ interface AppStore {
   goHome: () => void;
 }
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useAppStore = createWithEqualityFn<AppStore>((set) => ({
   route: 'loading',
   dailyStreak: 1,
   setRoute: (route) => set({ route }),

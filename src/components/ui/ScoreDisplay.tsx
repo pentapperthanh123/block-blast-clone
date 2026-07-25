@@ -7,16 +7,19 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGameStore } from '../../store/gameStore';
 import { UI_COLORS } from '../../constants';
+import { formatScore } from '../../utils/formatScore';
 
 export const ScoreDisplay: React.FC = () => {
-  const { score, highScore, resetGame } = useGameStore();
+  const score = useGameStore((s) => s.score);
+  const highScore = useGameStore((s) => s.highScore);
+  const resetGame = useGameStore((s) => s.resetGame);
 
   return (
     <View style={styles.container}>
       <View style={styles.scoreRow}>
         <View style={styles.scoreItem}>
           <Text style={styles.label}>Score</Text>
-          <Text style={styles.score}>{score.toLocaleString()}</Text>
+          <Text style={styles.score}>{formatScore(score)}</Text>
         </View>
 
         <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
@@ -25,7 +28,7 @@ export const ScoreDisplay: React.FC = () => {
 
         <View style={styles.scoreItem}>
           <Text style={styles.label}>Best</Text>
-          <Text style={styles.highScore}>{highScore.toLocaleString()}</Text>
+          <Text style={styles.highScore}>{formatScore(highScore)}</Text>
         </View>
       </View>
     </View>

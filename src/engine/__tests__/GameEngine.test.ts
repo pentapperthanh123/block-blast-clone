@@ -40,6 +40,7 @@ describe('GameEngine', () => {
       expect(state.currentPieces).toHaveLength(3);
       expect(state.isGameOver).toBe(false);
       expect(state.combo).toBe(0);
+      expect(state.movesWithoutClear).toBe(0);
     });
 
     it('should create empty grid', () => {
