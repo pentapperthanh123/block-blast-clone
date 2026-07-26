@@ -18,25 +18,25 @@ import Svg, { Circle, Ellipse, Path, Rect, G, Text } from 'react-native-svg';
 
 interface CuteMascotProps {
   visible: boolean;
-  emotion: 'happy' | 'excited' | 'shocked';
+  emotion: 'calm' | 'happy' | 'excited' | 'shocked';
 }
 
-export const CuteMascot: React.FC<CuteMascotProps> = ({ visible, emotion }) => {
+export const CuteMascot = React.memo<CuteMascotProps>(({ visible, emotion }) => {
   return (
     <>
       <MascotSide visible={visible} emotion={emotion} side="left" />
       <MascotSide visible={visible} emotion={emotion} side="right" />
     </>
   );
-};
+});
 
 interface MascotSideProps {
   visible: boolean;
-  emotion: 'happy' | 'excited' | 'shocked';
+  emotion: 'calm' | 'happy' | 'excited' | 'shocked';
   side: 'left' | 'right';
 }
 
-const MascotSide: React.FC<MascotSideProps> = ({ visible, emotion, side }) => {
+const MascotSide = React.memo<MascotSideProps>(({ visible, emotion, side }) => {
   const opacity = useSharedValue(0);
   const translateX = useSharedValue(side === 'left' ? -300 : 300);
   const scaleX = useSharedValue(1);
@@ -46,76 +46,134 @@ const MascotSide: React.FC<MascotSideProps> = ({ visible, emotion, side }) => {
 
   useEffect(() => {
     if (!visible) {
-      opacity.value = 0;
-      translateX.value = side === 'left' ? -300 : 300;
-      bounce.value = 0;
-      rotate.value = 0;
-      scaleX.value = 1;
-      scaleY.value = 1;
+      opacity.value = withTiming(0, { duration: 150 });
+      translateX.value = withTiming(side === 'left' ? -300 : 300, { duration: 250 });
+      bounce.value = withTiming(0, { duration: 150 });
+      rotate.value = withTiming(0, { duration: 150 });
+      scaleX.value = withTiming(1, { duration: 150 });
+      scaleY.value = withTiming(1, { duration: 150 });
       return;
     }
 
+    // Duration depends on emotion
+    const holdTime = emotion === 'calm' ? 1000 : emotion === 'happy' ? 1500 : 2500;
+    
     // Instantly visible but far off-screen
     opacity.value = withSequence(
       withTiming(1, { duration: 0 }),
-      withDelay(2500, withTiming(0, { duration: 300 }))
+      withDelay(holdTime, withTiming(0, { duration: 300 }))
     );
     
-    // Walk in over 600ms
+    // Walk in
     translateX.value = withSequence(
       withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
-      withDelay(1900, withTiming(side === 'left' ? -300 : 300, { duration: 500 }))
+      withDelay(holdTime - 600, withTiming(side === 'left' ? -300 : 300, { duration: 500 }))
     );
     
-    // Waddle bounce + HUGE jump (backflip)
-    bounce.value = withSequence(
-      withTiming(-20, { duration: 100, easing: Easing.out(Easing.quad) }),
-      withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) }),
-      withTiming(-20, { duration: 100, easing: Easing.out(Easing.quad) }),
-      withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) }),
-      withTiming(-20, { duration: 100, easing: Easing.out(Easing.quad) }),
-      withTiming(0, { duration: 100, easing: Easing.in(Easing.quad) }),
-      // HUGE jump
-      withDelay(200, withTiming(-150, { duration: 350, easing: Easing.out(Easing.cubic) })),
-      withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) })
-    );
+    if (emotion === 'calm') {
+      // Just a small peek and slide back (Good)
+      bounce.value = withSequence(
+        withTiming(-10, { duration: 150, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 150, easing: Easing.in(Easing.quad) })
+      );
+      rotate.value = withSequence(
+        withTiming(side === 'left' ? 5 : -5, { duration: 150 }),
+        withTiming(0, { duration: 150 })
+      );
+      scaleX.value = 1;
+      scaleY.value = 1;
+    } else if (emotion === 'happy') {
+      // Waddle and jump (Perfect)
+      bounce.value = withSequence(
+        withTiming(-20, { duration: 150 }),
+        withTiming(0, { duration: 150 }),
+        withDelay(100, withTiming(-80, { duration: 300, easing: Easing.out(Easing.cubic) })),
+        withTiming(0, { duration: 250, easing: Easing.in(Easing.cubic) })
+      );
+      rotate.value = withSequence(
+        withTiming(side === 'left' ? 10 : -10, { duration: 150 }),
+        withTiming(side === 'left' ? -10 : 10, { duration: 150 }),
+        withTiming(0, { duration: 100 })
+      );
+      scaleX.value = withSequence(
+        withTiming(1, { duration: 300 }),
+        withTiming(1.2, { duration: 100 }), // squish
+        withTiming(0.9, { duration: 300 }), // mid-air
+        withTiming(1.2, { duration: 100 }), // land
+        withSpring(1)
+      );
+      scaleY.value = withSequence(
+        withTiming(1, { duration: 300 }),
+        withTiming(0.8, { duration: 100 }), // squish
+        withTiming(1.1, { duration: 300 }), // mid-air
+        withTiming(0.8, { duration: 100 }), // land
+        withSpring(1)
+      );
+    } else if (emotion === 'excited') {
+      // Backflip (Awesome)
+      bounce.value = withSequence(
+        withTiming(-20, { duration: 100 }),
+        withTiming(0, { duration: 100 }),
+        withTiming(-20, { duration: 100 }),
+        withTiming(0, { duration: 100 }),
+        withDelay(200, withTiming(-150, { duration: 350, easing: Easing.out(Easing.cubic) })),
+        withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) })
+      );
+      const tilt = side === 'left' ? 12 : -12;
+      rotate.value = withSequence(
+        withTiming(tilt, { duration: 100 }),
+        withTiming(-tilt, { duration: 200 }),
+        withTiming(0, { duration: 100 }),
+        withDelay(200, withTiming(side === 'left' ? -360 : 360, { duration: 650, easing: Easing.inOut(Easing.ease) })),
+        withTiming(0, { duration: 0 })
+      );
+      scaleX.value = withSequence(
+        withTiming(1, { duration: 400 }),
+        withTiming(1.3, { duration: 200 }),
+        withTiming(0.8, { duration: 350 }),
+        withTiming(1.3, { duration: 100 }),
+        withSpring(1)
+      );
+      scaleY.value = withSequence(
+        withTiming(1, { duration: 400 }),
+        withTiming(0.7, { duration: 200 }),
+        withTiming(1.2, { duration: 350 }),
+        withTiming(0.7, { duration: 100 }),
+        withSpring(1)
+      );
+    } else {
+      // Shocked: Crazy fast spin and multi-bounce (Unbelievable)
+      bounce.value = withSequence(
+        withTiming(-40, { duration: 150 }),
+        withTiming(0, { duration: 150 }),
+        withTiming(-200, { duration: 400, easing: Easing.out(Easing.cubic) }),
+        withTiming(-100, { duration: 200, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-180, { duration: 200, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) })
+      );
+      rotate.value = withSequence(
+        withTiming(side === 'left' ? 20 : -20, { duration: 150 }),
+        withTiming(0, { duration: 150 }),
+        withTiming(side === 'left' ? -720 : 720, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 0 })
+      );
+      scaleX.value = withSequence(
+        withTiming(1.4, { duration: 150 }),
+        withTiming(0.7, { duration: 150 }),
+        withTiming(1.1, { duration: 400 }),
+        withTiming(1.4, { duration: 100 }),
+        withSpring(1)
+      );
+      scaleY.value = withSequence(
+        withTiming(0.6, { duration: 150 }),
+        withTiming(1.3, { duration: 150 }),
+        withTiming(0.9, { duration: 400 }),
+        withTiming(0.6, { duration: 100 }),
+        withSpring(1)
+      );
+    }
 
-    // Waddle rotation + Backflip
-    const tilt = side === 'left' ? 12 : -12;
-    rotate.value = withSequence(
-      withTiming(tilt, { duration: 100 }),
-      withTiming(-tilt, { duration: 200 }),
-      withTiming(tilt, { duration: 200 }),
-      withTiming(0, { duration: 100 }),
-      // Backflip! 360 degrees
-      withDelay(200, withTiming(side === 'left' ? -360 : 360, { duration: 650, easing: Easing.inOut(Easing.ease) })),
-      withTiming(0, { duration: 0 }) // Reset silently
-    );
-
-    // Squish and stretch (scaleX / scaleY)
-    scaleX.value = withSequence(
-      withTiming(1, { duration: 600 }),
-      // Prep jump (squish down)
-      withTiming(1.2, { duration: 200 }),
-      // Mid-air (stretch up)
-      withTiming(0.8, { duration: 350 }),
-      // Landing squish
-      withTiming(1.3, { duration: 100 }),
-      withSpring(1, { damping: 6, stiffness: 200 })
-    );
-
-    scaleY.value = withSequence(
-      withTiming(1, { duration: 600 }),
-      // Prep jump (squish down)
-      withTiming(0.8, { duration: 200 }),
-      // Mid-air (stretch up)
-      withTiming(1.2, { duration: 350 }),
-      // Landing squish
-      withTiming(0.7, { duration: 100 }),
-      withSpring(1, { damping: 6, stiffness: 200 })
-    );
-
-  }, [visible, opacity, translateX, scaleX, scaleY, bounce, rotate, side]);
+  }, [visible, opacity, translateX, scaleX, scaleY, bounce, rotate, side, emotion]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -139,9 +197,9 @@ const MascotSide: React.FC<MascotSideProps> = ({ visible, emotion, side }) => {
       <MascotSVG emotion={emotion} color={color} side={side} />
     </Animated.View>
   );
-};
+});
 
-const MascotSVG: React.FC<{ emotion: 'happy' | 'excited' | 'shocked'; color: string, side: 'left' | 'right' }> = ({ 
+const MascotSVG = React.memo<{ emotion: 'calm' | 'happy' | 'excited' | 'shocked'; color: string, side: 'left' | 'right' }>(({ 
   emotion, 
   color,
   side
@@ -177,16 +235,43 @@ const MascotSVG: React.FC<{ emotion: 'happy' | 'excited' | 'shocked'; color: str
           <Rect x="12" y="65" width="10" height="28" rx="4" fill="#7E57C2" stroke="#2D3748" strokeWidth="2" />
           <Rect x="78" y="65" width="10" height="28" rx="4" fill="#7E57C2" stroke="#2D3748" strokeWidth="2" />
           
-          {/* Eyes */}
-          <Circle cx="40" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
-          <Circle cx="60" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
-          <Circle cx="42" cy="52" r="3" fill="#2D3748" />
-          <Circle cx="62" cy="52" r="3" fill="#2D3748" />
-          <Circle cx="44" cy="50" r="1" fill="#FFF" />
-          <Circle cx="64" cy="50" r="1" fill="#FFF" />
+          {/* Eyes based on emotion */}
+          {emotion === 'calm' ? (
+            <>
+              {/* Calm eyes: simple lines */}
+              <Path d="M 35 52 Q 40 50 45 52" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+              <Path d="M 55 52 Q 60 50 65 52" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </>
+          ) : emotion === 'shocked' ? (
+            <>
+              {/* Shocked eyes: huge circles */}
+              <Circle cx="40" cy="52" r="11" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="60" cy="52" r="11" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="40" cy="52" r="3" fill="#2D3748" />
+              <Circle cx="60" cy="52" r="3" fill="#2D3748" />
+            </>
+          ) : (
+            <>
+              {/* Happy/Excited eyes */}
+              <Circle cx="40" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="60" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="42" cy="52" r="3" fill="#2D3748" />
+              <Circle cx="62" cy="52" r="3" fill="#2D3748" />
+              <Circle cx="44" cy="50" r="1" fill="#FFF" />
+              <Circle cx="64" cy="50" r="1" fill="#FFF" />
+            </>
+          )}
           
-          {/* Mouth */}
-          <Path d="M 46 62 Q 50 67 54 62" stroke="#2D3748" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          {/* Mouth based on emotion */}
+          {emotion === 'shocked' ? (
+            <Ellipse cx="50" cy="65" rx="5" ry="8" fill="#2D3748" />
+          ) : emotion === 'excited' ? (
+            <Path d="M 43 62 Q 50 72 57 62 Z" fill="#EF4444" stroke="#2D3748" strokeWidth="2" strokeLinejoin="round" />
+          ) : emotion === 'calm' ? (
+            <Path d="M 47 62 Q 50 64 53 62" stroke="#2D3748" strokeWidth="2" fill="none" strokeLinecap="round" />
+          ) : (
+            <Path d="M 46 62 Q 50 67 54 62" stroke="#2D3748" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          )}
         </Svg>
       </View>
     );
@@ -220,20 +305,55 @@ const MascotSVG: React.FC<{ emotion: 'happy' | 'excited' | 'shocked'; color: str
           <Rect x="12" y="65" width="10" height="28" rx="4" fill="#EF4444" stroke="#2D3748" strokeWidth="2" />
           <Rect x="78" y="65" width="10" height="28" rx="4" fill="#EF4444" stroke="#2D3748" strokeWidth="2" />
           
-          {/* Sassy Eyes (half closed) */}
-          <Path d="M 35 48 Q 50 48 65 48" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <Path d="M 35 48 Q 42 56 49 48 Z" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
-          <Path d="M 51 48 Q 58 56 65 48 Z" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
-          <Circle cx="44" cy="51" r="2.5" fill="#2D3748" />
-          <Circle cx="60" cy="51" r="2.5" fill="#2D3748" />
+          {/* Eyes based on emotion */}
+          {emotion === 'calm' ? (
+            <>
+              {/* Calm eyes: simple lines */}
+              <Path d="M 35 52 Q 40 50 45 52" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+              <Path d="M 55 52 Q 60 50 65 52" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </>
+          ) : emotion === 'shocked' ? (
+            <>
+              {/* Shocked eyes: huge circles */}
+              <Circle cx="40" cy="52" r="11" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="60" cy="52" r="11" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="40" cy="52" r="3" fill="#2D3748" />
+              <Circle cx="60" cy="52" r="3" fill="#2D3748" />
+            </>
+          ) : emotion === 'happy' ? (
+            <>
+              {/* Happy eyes */}
+              <Circle cx="40" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="60" cy="52" r="9" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="38" cy="52" r="3" fill="#2D3748" />
+              <Circle cx="58" cy="52" r="3" fill="#2D3748" />
+            </>
+          ) : (
+            <>
+              {/* Sassy Eyes (Excited/Default) */}
+              <Path d="M 35 48 Q 50 48 65 48" stroke="#2D3748" strokeWidth="3" fill="none" strokeLinecap="round" />
+              <Path d="M 35 48 Q 42 56 49 48 Z" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Path d="M 51 48 Q 58 56 65 48 Z" fill="#FFF" stroke="#2D3748" strokeWidth="2" />
+              <Circle cx="44" cy="51" r="2.5" fill="#2D3748" />
+              <Circle cx="60" cy="51" r="2.5" fill="#2D3748" />
+            </>
+          )}
           
-          {/* Smirk */}
-          <Path d="M 45 64 Q 50 67 60 60" stroke="#2D3748" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          {/* Mouth based on emotion */}
+          {emotion === 'shocked' ? (
+            <Ellipse cx="50" cy="65" rx="6" ry="9" fill="#2D3748" />
+          ) : emotion === 'excited' ? (
+            <Path d="M 42 62 Q 50 74 58 62 Z" fill="#2D3748" stroke="#2D3748" strokeWidth="2" strokeLinejoin="round" />
+          ) : emotion === 'calm' ? (
+            <Path d="M 45 64 Q 50 65 55 64" stroke="#2D3748" strokeWidth="2" fill="none" strokeLinecap="round" />
+          ) : (
+            <Path d="M 45 64 Q 50 67 60 60" stroke="#2D3748" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+          )}
         </Svg>
       </View>
     );
   }
-};
+});
 
 const styles = StyleSheet.create({
   container: {

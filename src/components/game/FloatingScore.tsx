@@ -21,7 +21,7 @@ interface FloatingScoreProps {
   index?: number;
 }
 
-export const FloatingScore: React.FC<FloatingScoreProps> = ({
+export const FloatingScore = React.memo<FloatingScoreProps>(({
   position,
   points,
   active,
@@ -120,7 +120,17 @@ export const FloatingScore: React.FC<FloatingScoreProps> = ({
       )}
     </Animated.View>
   );
-};
+}, (prev, next) => {
+  return (
+    prev.points === next.points &&
+    prev.active === next.active &&
+    prev.delay === next.delay &&
+    prev.kind === next.kind &&
+    prev.index === next.index &&
+    prev.position.row === next.position.row &&
+    prev.position.col === next.position.col
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

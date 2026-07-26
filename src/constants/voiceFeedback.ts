@@ -15,12 +15,21 @@ const AUDIO_FILES: Record<VoiceFeedbackTier, any> = {
   Unbelievable: require('../../assets/sounds/unbelievable.wav'),
 };
 
+const POOL_SIZE = 3;
+
 // Store loaded sound objects
-const loadedSounds: Record<VoiceFeedbackTier, Audio.Sound | null> = {
-  Good: null,
-  Perfect: null,
-  Awesome: null,
-  Unbelievable: null,
+const loadedSounds: Record<VoiceFeedbackTier, Audio.Sound[]> = {
+  Good: [],
+  Perfect: [],
+  Awesome: [],
+  Unbelievable: [],
+};
+
+const poolIndex: Record<VoiceFeedbackTier, number> = {
+  Good: 0,
+  Perfect: 0,
+  Awesome: 0,
+  Unbelievable: 0,
 };
 
 // Volume configuration per tier
@@ -45,9 +54,13 @@ export async function preloadAllVoiceFeedback(): Promise<void> {
 
     // Load each sound
     for (const tier of Object.keys(AUDIO_FILES) as VoiceFeedbackTier[]) {
-      if (!loadedSounds[tier]) {
-        const { sound } = await Audio.Sound.createAsync(AUDIO_FILES[tier]);
-        loadedSounds[tier] = sound;
+      if (loadedSounds[tier].length === 0) {
+        const pool: Audio.Sound[] = [];
+        for (let i = 0; i < POOL_SIZE; i++) {
+          const { sound } = await Audio.Sound.createAsync(AUDIO_FILES[tier]);
+          pool.push(sound);
+        }
+        loadedSounds[tier] = pool;
       }
     }
   } catch (error) {
@@ -63,21 +76,22 @@ export async function playVoiceFeedback(
   customVolume?: number
 ): Promise<void> {
   try {
-    const sound = loadedSounds[tier];
-    if (!sound) {
-      console.warn(`Sound for ${tier} not preloaded!`);
-      return;
+    let sounds = loadedSounds[tier];
+    if (!sounds || sounds.length === 0) {
+      await preloadAllVoiceFeedback();
+      sounds = loadedSounds[tier];
+      if (!sounds || sounds.length === 0) return;
     }
 
     const volume = customVolume ?? SPEECH_CONFIG[tier].volume;
     
-    // Stop any ongoing speech
-    await sound.stopAsync();
+    // Get next sound from pool
+    const idx = poolIndex[tier];
+    const sound = sounds[idx];
+    poolIndex[tier] = (idx + 1) % POOL_SIZE;
     
-    // Set volume and play from beginning
-    await sound.setVolumeAsync(volume);
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
+    // Fire and forget (non-blocking)
+    sound.setVolumeAsync(volume).then(() => sound.replayAsync());
   } catch (error) {
     console.warn(`Failed to play pre-recorded sound for ${tier}:`, error);
   }
@@ -95,10 +109,11 @@ export function getVoiceVolume(tier: VoiceFeedbackTier): number {
  */
 export async function unloadAllVoiceFeedback(): Promise<void> {
   for (const tier of Object.keys(loadedSounds) as VoiceFeedbackTier[]) {
-    const sound = loadedSounds[tier];
-    if (sound) {
+    const pool = loadedSounds[tier];
+    for (const sound of pool) {
       await sound.unloadAsync();
-      loadedSounds[tier] = null;
     }
+    loadedSounds[tier] = [];
+    poolIndex[tier] = 0;
   }
 }

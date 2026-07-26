@@ -16,7 +16,7 @@ import { useGameStore } from '../../store/gameStore';
 import { UI_COLORS } from '../../constants';
 import { formatScore } from '../../utils/formatScore';
 
-export const NewRoundTransition: React.FC = () => {
+export const NewRoundTransition = React.memo(() => {
   const phase = useGameStore((s) => s.newRoundPhase);
   const lastGameOver = useGameStore((s) => s.lastGameOver);
 
@@ -68,18 +68,18 @@ export const NewRoundTransition: React.FC = () => {
     >
       {phase === 'recap' && (
         <Animated.View style={[styles.card, cardStyle]}>
-          <Text style={styles.kicker}>Last Round</Text>
+          <Text style={styles.kicker}>Ván Vừa Qua</Text>
           <Text style={styles.score}>{formatScore(lastGameOver.score)}</Text>
           <Text style={styles.meta}>
-            Best {formatScore(lastGameOver.highScore)}
-            {lastGameOver.isNewHighScore ? ' · New record!' : ''}
+            Kỷ lực {formatScore(lastGameOver.highScore)}
+            {lastGameOver.isNewHighScore ? ' · Kỷ lục mới!' : ''}
           </Text>
-          <Text style={styles.hint}>Get ready...</Text>
+          <Text style={styles.hint}>Sẵn sàng...</Text>
         </Animated.View>
       )}
     </Animated.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   overlay: {

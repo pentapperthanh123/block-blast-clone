@@ -75,12 +75,32 @@ const BLOCK_SHAPES: number[][][] = [
     [1, 1],
     [1, 0],
   ],
+  // Diagonals (1 nút chéo)
+  [
+    [1, 0],
+    [0, 1],
+  ],
+  [
+    [0, 1],
+    [1, 0],
+  ],
+  [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ],
+  [
+    [0, 0, 1],
+    [0, 1, 0],
+    [1, 0, 0],
+  ],
 ];
 
 /** Index-aligned weights — smaller shapes common, 3×3 (~index 8) rare */
 const NORMAL_SPAWN_WEIGHTS: readonly number[] = [
   14, 12, 12, 11, 11, 10, 10, 9, 4,
   7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+  15, 15, 10, 10, // Diagonals (Tăng trọng số xuất hiện)
 ];
 
 const SHAPE_3X3_INDEX = 8;
@@ -358,6 +378,7 @@ export class BlockGenerator {
   }
 
   private findClearableBlock(grid: Grid): BlockShape | null {
+    // 1. First priority: find a block that directly clears 1+ lines right now
     for (const shape of this.shuffledShapes()) {
       const stub = this.shapeToBlock(shape);
       for (let row = 0; row < GRID_SIZE; row++) {
@@ -373,6 +394,14 @@ export class BlockGenerator {
         }
       }
     }
+
+    // 2. Second priority (if no direct clear exists): pick a very easy line-builder block (1x1, 1x2, 1x3, 1x4, 2x2)
+    for (const shape of COMBO_STARTER_SHAPES) {
+      if (this.isShapePlaceable(grid, shape)) {
+        return this.shapeToBlock(shape);
+      }
+    }
+
     return null;
   }
 

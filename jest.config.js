@@ -9,6 +9,7 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',
   ],
+  setupFiles: ['./jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

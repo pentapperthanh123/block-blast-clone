@@ -24,7 +24,7 @@ import { playGlobalSound, GAME_OVER_SOUND, stopWarningSound } from '../../consta
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export const GameOverModal: React.FC = () => {
+export const GameOverModal = React.memo(() => {
   const score = useGameStore((s) => s.score);
   const highScore = useGameStore((s) => s.highScore);
   const beginNewRound = useGameStore((s) => s.beginNewRound);
@@ -75,32 +75,32 @@ export const GameOverModal: React.FC = () => {
   return (
     <View style={styles.overlay}>
       <Animated.View style={[styles.modal, modalStyle]}>
-        <Text style={styles.title}>Game Over!</Text>
+        <Text style={styles.title}>Thua Cuộc!</Text>
 
         {isNewHighScore && (
-          <Text style={styles.newHighScore}>New High Score!</Text>
+          <Text style={styles.newHighScore}>Kỷ Lục Mới!</Text>
         )}
 
         <View style={styles.scoreContainer}>
-          <Text style={styles.label}>Your Score</Text>
+          <Text style={styles.label}>Điểm Của Bạn</Text>
           <Text style={styles.score}>{formatScore(displayScore)}</Text>
-          <Text style={[styles.label, styles.bestLabel]}>Best Score</Text>
+          <Text style={[styles.label, styles.bestLabel]}>Điểm Cao Nhất</Text>
           <Text style={styles.bestScore}>{formatScore(highScore)}</Text>
         </View>
 
         <Pressable style={styles.button} onPress={beginNewRound}>
-          <Text style={styles.buttonText}>Play Again</Text>
+          <Text style={styles.buttonText}>Chơi Lại</Text>
         </Pressable>
         <Pressable
           style={[styles.button, styles.secondary]}
           onPress={goHome}
         >
-          <Text style={[styles.buttonText, styles.secondaryText]}>Home</Text>
+          <Text style={[styles.buttonText, styles.secondaryText]}>Trang Chủ</Text>
         </Pressable>
       </Animated.View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   overlay: {

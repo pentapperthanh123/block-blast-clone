@@ -33,22 +33,17 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-const COMBO_OPTIONS: {
-  id: ComboMode;
-  title: string;
-  description: string;
-}[] = [
-  {
-    id: 'persist',
-    title: 'Stack',
-    description: 'Combo keeps stacking until game over (saved automatically)',
-  },
-  {
-    id: 'reset',
-    title: 'Classic',
-    description: 'Miss a clear → combo resets to 0',
-  },
+const COMBO_OPTIONS: { id: ComboMode; title: string; description: string }[] = [
+  { id: 'reset', title: 'Reset', description: 'Mất combo ngay khi đặt không xóa được hàng' },
+  { id: 'persist', title: 'Duy trì', description: 'Duy trì combo liên tục qua các lượt' },
 ];
+
+const FILL_RATIO_OPTIONS = [
+  { id: 0.15, title: 'Thưa thớt', description: '15% - Nhẹ nhàng' },
+  { id: 0.35, title: 'Trung bình', description: '35% - Thử thách' },
+  { id: 0.60, title: 'Dày đặc', description: '60% - Rất khó' },
+  { id: 0.80, title: 'Siêu khó', description: '80% - Hardcore' },
+] as const;
 
 function pctLabel(value: number): string {
   return `${Math.round(value * 100)}%`;
@@ -89,12 +84,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
   const setBlockGenSettings = useGameStore((s) => s.setBlockGenSettings);
   const gameplaySettings = useGameStore((s) => s.gameplaySettings);
   const setGameplaySettings = useGameStore((s) => s.setGameplaySettings);
+  const highScore = useGameStore((s) => s.highScore);
+  const resetHighScore = useGameStore((s) => s.resetHighScore);
 
   const [pendingTheme, setPendingTheme] = useState<ThemeName>(currentTheme);
   const [pendingBlockGen, setPendingBlockGen] =
     useState<BlockGenSettings>(blockGenSettings);
   const [pendingGameplay, setPendingGameplay] =
     useState<GameplaySettings>(gameplaySettings);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -115,7 +113,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
     if (JSON.stringify(pendingBlockGen) !== JSON.stringify(blockGenSettings)) {
       setBlockGenSettings(pendingBlockGen);
     }
-    if (
+    if(
       JSON.stringify(pendingGameplay) !== JSON.stringify(gameplaySettings)
     ) {
       setGameplaySettings(pendingGameplay);
@@ -140,7 +138,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.title}>Settings</Text>
+            <Text style={styles.title}>Cài Đặt</Text>
             <Pressable onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={28} color="#FFF" />
             </Pressable>
@@ -148,9 +146,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Combo</Text>
+              <Text style={styles.sectionTitle}>Chế độ Combo</Text>
               <Text style={styles.sectionDescription}>
-                When should your combo break?
+                Quy tắc duy trì chuỗi Combo khi đặt khối
               </Text>
 
               <View style={styles.comboRow}>
@@ -193,9 +191,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Cảnh báo</Text>
+              <Text style={styles.sectionTitle}>Cảnh Báo Nguy Hiểm</Text>
               <Text style={styles.sectionDescription}>
-                Viền nhấp nháy và âm thanh khi bàn sắp kín
+                Viền nhấp nháy và âm thanh cảnh báo khi bàn sắp đầy
               </Text>
 
               <Pressable
@@ -217,7 +215,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                 <View style={styles.toggleCopy}>
                   <Text style={styles.toggleTitle}>Cảnh báo nguy hiểm</Text>
                   <Text style={styles.toggleDesc}>
-                    Tắt nếu viền đỏ/cam và tiếng beep làm phiền
+                    Bật/tắt hiệu ứng viền đỏ và tiếng beep khi gần thua
                   </Text>
                 </View>
                 <View
@@ -234,9 +232,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ván mới</Text>
+              <Text style={styles.sectionTitle}>Ván Mới</Text>
               <Text style={styles.sectionDescription}>
-                Tuỳ chọn khi bắt đầu lại sau khi thua
+                Tùy chọn thiết lập bàn khi bắt đầu ván mới
               </Text>
 
               <Pressable
@@ -256,9 +254,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                 }}
               >
                 <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Clear sàn khi ván mới</Text>
+                  <Text style={styles.toggleTitle}>Làm sạch sàn khi ván mới</Text>
                   <Text style={styles.toggleDesc}>
-                    Bàn trống hoàn toàn thay vì có vài ô ngẫu nhiên
+                    Bắt đầu với bàn trống hoàn toàn thay vì có ô ngẫu nhiên
                   </Text>
                 </View>
                 <View
@@ -272,17 +270,67 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                   </Text>
                 </View>
               </Pressable>
+
+              {!pendingGameplay.clearBoardOnNewRound && (
+                <View style={{ marginTop: 16 }}>
+                  <Text style={styles.fieldLabel}>Mật độ lấp đầy ngẫu nhiên</Text>
+                  <Text style={styles.fieldHint}>
+                    Tỷ lệ ô có sẵn trên bàn khi bắt đầu ván mới
+                  </Text>
+                  <View style={styles.comboRow}>
+                    {FILL_RATIO_OPTIONS.map((option) => {
+                      const isActive = pendingGameplay.randomFillRatio === option.id;
+                      return (
+                        <Pressable
+                          key={option.id}
+                          style={[
+                            styles.comboCard,
+                            isActive && styles.comboCardActive,
+                          ]}
+                          onPress={() =>
+                            setPendingGameplay((prev) => ({
+                              ...prev,
+                              randomFillRatio: option.id,
+                            }))
+                          }
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: isActive }}
+                        >
+                          <Text
+                            style={[
+                              styles.comboTitle,
+                              isActive && styles.comboTitleActive,
+                            ]}
+                          >
+                            {option.title}
+                          </Text>
+                          <Text style={styles.comboDesc}>{option.description}</Text>
+                          {isActive && (
+                            <View style={styles.comboCheck}>
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={22}
+                                color="#4ADE80"
+                              />
+                            </View>
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Sinh block</Text>
+              <Text style={styles.sectionTitle}>Sinh Block & Tỉ Lệ Dễ Clear</Text>
               <Text style={styles.sectionDescription}>
-                Tùy chỉnh xác suất mảnh hỗ trợ clear và boost sau khi clear hết sàn
+                Tùy chỉnh xác suất xuất hiện mảnh hỗ trợ xóa hàng/cột và boost mảnh dễ ăn
               </Text>
 
-              <Text style={styles.fieldLabel}>Tỉ lệ mảnh clear ngay</Text>
+              <Text style={styles.fieldLabel}>Tỉ lệ sinh mảnh hỗ trợ Clear ngay</Text>
               <Text style={styles.fieldHint}>
-                Khi bàn còn ô — khả năng có 1 mảnh xóa hàng/cột ngay khi đặt
+                Xác suất xuất hiện mảnh ăn điểm ngay hoặc mảnh dễ ghép hàng (0% - 100%)
               </Text>
               <ChipRow
                 options={CLEAR_HELPER_PRESETS}
@@ -307,9 +355,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                 }}
               >
                 <View style={styles.toggleCopy}>
-                  <Text style={styles.toggleTitle}>Boost sau clear hết sàn</Text>
+                  <Text style={styles.toggleTitle}>Boost mảnh khi clear hết sàn</Text>
                   <Text style={styles.toggleDesc}>
-                    Ưu tiên mảnh I / xếp hàng để combo tiếp
+                    Ưu tiên mảnh I và mảnh 1-3 ô dễ ghép hàng sau khi xóa sạch sàn
                   </Text>
                 </View>
                 <View
@@ -327,7 +375,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
               {pendingBlockGen.fullClearBoostEnabled ? (
                 <>
                   <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-                    Số mảnh line-builder (I / 3 ô)
+                    Số lượng mảnh line-builder (Mảnh I / 3 ô)
                   </Text>
                   <ChipRow
                     options={FULL_CLEAR_LINE_COUNT_OPTIONS}
@@ -338,7 +386,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                   />
 
                   <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
-                    Tỉ lệ slot còn lại là line-builder
+                    Tỉ lệ khay còn lại ưu tiên mảnh line-builder
                   </Text>
                   <ChipRow
                     options={FULL_CLEAR_LINE_CHANCE_PRESETS}
@@ -353,10 +401,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Choose Theme</Text>
+              <Text style={styles.sectionTitle}>Giao Diện & Theme</Text>
               <Text style={styles.sectionDescription}>
-                Select your favorite game theme
+                Chọn giao diện chủ đề yêu thích cho game
               </Text>
+
+              <Pressable
+                style={[
+                  styles.toggleRow,
+                  pendingGameplay.randomThemeOnNewRound && styles.toggleRowActive,
+                ]}
+                onPress={() =>
+                  setPendingGameplay((prev) => ({
+                    ...prev,
+                    randomThemeOnNewRound: !prev.randomThemeOnNewRound,
+                  }))
+                }
+                accessibilityRole="switch"
+                accessibilityState={{
+                  checked: pendingGameplay.randomThemeOnNewRound,
+                }}
+              >
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Tự động đổi Theme ván mới</Text>
+                  <Text style={styles.toggleDesc}>
+                    Thay đổi giao diện ngẫu nhiên mỗi khi bắt đầu ván mới
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.togglePill,
+                    pendingGameplay.randomThemeOnNewRound && styles.togglePillOn,
+                  ]}
+                >
+                  <Text style={styles.togglePillText}>
+                    {pendingGameplay.randomThemeOnNewRound ? 'ON' : 'OFF'}
+                  </Text>
+                </View>
+              </Pressable>
 
               <View style={styles.themeGrid}>
                 {THEME_LIST.map((theme) => {
@@ -403,15 +485,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
                 })}
               </View>
             </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Điểm Kỷ Lục</Text>
+              <Text style={styles.sectionDescription}>
+                Quản lý điểm số cao nhất ({highScore} điểm)
+              </Text>
+
+              {showResetConfirm ? (
+                <View style={styles.resetConfirmBox}>
+                  <Text style={styles.resetConfirmTitle}>Xác nhận xóa điểm kỷ lục?</Text>
+                  <Text style={styles.resetConfirmDesc}>
+                    Điểm số kỷ lục hiện tại ({highScore} điểm) sẽ bị xóa về 0.
+                  </Text>
+                  <View style={styles.resetConfirmRow}>
+                    <Pressable
+                      style={styles.cancelResetBtn}
+                      onPress={() => setShowResetConfirm(false)}
+                    >
+                      <Text style={styles.cancelResetText}>Hủy</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.confirmResetBtn}
+                      onPress={async () => {
+                        await resetHighScore();
+                        setShowResetConfirm(false);
+                      }}
+                    >
+                      <Text style={styles.confirmResetText}>Đồng ý xóa</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.resetBtn}
+                  onPress={() => setShowResetConfirm(true)}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  <Text style={styles.resetBtnText}>Reset điểm kỷ lục</Text>
+                </Pressable>
+              )}
+            </View>
           </ScrollView>
 
           <View style={styles.footer}>
             <View style={styles.footerRow}>
               <Pressable style={styles.cancelButton} onPress={handleClose}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>Hủy</Text>
               </Pressable>
               <Pressable style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={styles.saveButtonText}>Lưu</Text>
               </Pressable>
             </View>
           </View>
@@ -694,12 +817,73 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   saveButtonText: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#000',
+  },
+  resetBtn: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  resetBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#EF4444',
+  },
+  resetConfirmBox: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+    gap: 8,
+  },
+  resetConfirmTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#F87171',
+  },
+  resetConfirmDesc: {
+    fontSize: 13,
+    color: '#FECDD3',
+    fontWeight: '600',
+  },
+  resetConfirmRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  cancelResetBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+  },
+  cancelResetText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+  confirmResetBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+  },
+  confirmResetText: {
+    fontSize: 14,
     fontWeight: '900',
     color: '#FFF',
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 });

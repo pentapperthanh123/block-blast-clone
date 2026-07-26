@@ -19,7 +19,7 @@ import { SettingsModal } from './SettingsModal';
 
 const COUNTER_MS = 650;
 
-export const GameHeader: React.FC = () => {
+export const GameHeader = React.memo(() => {
   const score = useGameStore((s) => s.score);
   const highScore = useGameStore((s) => s.highScore);
   const goHome = useAppStore((s) => s.goHome);
@@ -127,7 +127,7 @@ export const GameHeader: React.FC = () => {
       />
     </>
   );
-};
+});
 
 const styles = StyleSheet.create({
   root: {

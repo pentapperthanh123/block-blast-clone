@@ -16,7 +16,7 @@ const TIER_COLOR: Record<FeedbackTier, string> = {
   Unbelievable: '#FF6B6B',
 };
 
-export const FeedbackOverlay: React.FC = () => {
+export const FeedbackOverlay = React.memo(() => {
   const visible = useGameStore((s) => s.feedbackVisible);
   const nonce = useGameStore((s) => s.feedbackNonce);
   const breakdown = useGameStore((s) => s.lastScoreBreakdown);
@@ -56,16 +56,20 @@ export const FeedbackOverlay: React.FC = () => {
       }),
     ]).start();
 
+    const popupDuration = ANIMATION.SCORE_POPUP;
+    const fadeOutDuration = 200;
+    const fadeOutStart = Math.max(100, popupDuration - fadeOutDuration);
+
     const fadeOut = setTimeout(() => {
       Animated.timing(fade, {
         toValue: 0,
-        duration: 220,
+        duration: fadeOutDuration,
         easing: Easing.in(Easing.quad),
         useNativeDriver: false,
       }).start();
-    }, ANIMATION.SCORE_POPUP - 260);
+    }, fadeOutStart);
 
-    const hide = setTimeout(() => setShow(false), ANIMATION.SCORE_POPUP);
+    const hide = setTimeout(() => setShow(false), popupDuration);
     return () => {
       clearTimeout(fadeOut);
       clearTimeout(hide);
@@ -73,7 +77,10 @@ export const FeedbackOverlay: React.FC = () => {
   }, [visible, breakdown, nonce, fade, scale]);
 
   useEffect(() => {
-    if (!savedMoment) return;
+    if (!savedMoment) {
+      setShowSaved(false);
+      return;
+    }
     setShowSaved(true);
     savedFade.setValue(0);
     savedScale.setValue(0.7);
@@ -162,7 +169,7 @@ export const FeedbackOverlay: React.FC = () => {
       </View>
     </Animated.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   root: {

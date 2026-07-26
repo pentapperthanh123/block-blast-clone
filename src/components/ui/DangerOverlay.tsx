@@ -56,8 +56,7 @@ export const DangerOverlay: React.FC<DangerOverlayProps> = ({ gridRadius = 6 }) 
         withSequence(
           withTiming(1, { duration: 550 }),
           withTiming(0.35, { duration: 550 }),
-        ),
-        -1,
+        ), 999999,
         true,
       );
       return;
@@ -67,8 +66,7 @@ export const DangerOverlay: React.FC<DangerOverlayProps> = ({ gridRadius = 6 }) 
       withSequence(
         withTiming(1, { duration: 260 }),
         withTiming(0.3, { duration: 260 }),
-      ),
-      -1,
+      ), 999999,
       true,
     );
   }, [intensity, level, warningEnabled]);

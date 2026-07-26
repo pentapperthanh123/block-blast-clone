@@ -52,6 +52,16 @@ interface GhostPreview {
   predictedPositions: Position[];
 }
 
+export interface ActiveSessionSnapshot {
+  grid: number[][];
+  cellColors: ColorGrid;
+  currentPieces: (BlockShape | null)[];
+  score: number;
+  combo: number;
+  currentTheme: ThemeName;
+  boardEpoch: number;
+}
+
 export interface DragOverlayState {
   block: BlockShape;
   pageX: number;
@@ -67,6 +77,7 @@ interface GameStore extends GameState {
   justPlaced: Position[];
   placedCellScores: PlacedCellFx[];
   isAnimatingClear: boolean;
+  isAnimatingPerfectClear: boolean;
   lastMoodIndex: number;
   moodVisible: boolean;
   /** Keeps Good/Perfect popup alive after clear rows reset */
@@ -107,7 +118,7 @@ interface GameStore extends GameState {
   triggerImmediateGameOver: () => void;
   /** Confirm loss only after a failed board drop while deadlocked */
   confirmGameOverIfDeadlocked: () => void;
-  placeBlock: (block: BlockShape, position: Position, onPlaced?: () => void) => boolean;
+  placeBlock: (block: BlockShape, position: Position, onPlaced?: (success: boolean) => void) => boolean;
   canPlace: (block: BlockShape, position: Position) => boolean;
   setGhost: (ghost: GhostPreview | null) => void;
   setDragOverlay: (overlay: DragOverlayState | null) => void;
@@ -119,12 +130,17 @@ interface GameStore extends GameState {
   loadLastGameOver: () => Promise<void>;
   loadComboMode: () => Promise<void>;
   saveHighScore: (score: number) => Promise<void>;
+  resetHighScore: () => Promise<void>;
   hideMood: () => void;
   hideHighScoreCelebration: () => void;
   changeTheme: (theme: ThemeName) => void;
   cycleRandomTheme: () => void;
   setComboMode: (mode: ComboMode) => void;
   setBlockGenSettings: (settings: BlockGenSettings) => void;
+  activeSession: ActiveSessionSnapshot | null;
+  saveActiveSessionIfNeeded: () => void;
+  clearActiveSession: () => void;
+  loadActiveSession: () => Promise<void>;
   loadBlockGenSettings: () => Promise<void>;
   setGameplaySettings: (settings: GameplaySettings) => void;
   loadGameplaySettings: () => Promise<void>;
@@ -132,6 +148,7 @@ interface GameStore extends GameState {
 
 const HIGH_SCORE_KEY = '@block-blast:high-score';
 const LAST_GAME_OVER_KEY = '@block-blast:last-game-over';
+const ACTIVE_SESSION_KEY = '@block-blast:active-session';
 const COMBO_MODE_KEY = '@block-blast:combo-mode';
 const BLOCK_GEN_SETTINGS_KEY = '@block-blast:block-gen-settings';
 const GAMEPLAY_SETTINGS_KEY = '@block-blast:gameplay-settings';
@@ -139,6 +156,7 @@ const GAMEPLAY_SETTINGS_KEY = '@block-blast:gameplay-settings';
 let clearTimer: ReturnType<typeof setTimeout> | null = null;
 let moodTimer: ReturnType<typeof setTimeout> | null = null;
 let feedbackTimer: ReturnType<typeof setTimeout> | null = null;
+let perfectClearTimer: ReturnType<typeof setTimeout> | null = null;
 let newRoundRecapTimer: ReturnType<typeof setTimeout> | null = null;
 let newRoundFallTimer: ReturnType<typeof setTimeout> | null = null;
 let newRoundRevealTimer: ReturnType<typeof setTimeout> | null = null;
@@ -311,6 +329,7 @@ function applyFreshRoundState(
   const { grid: nextGrid, colors: nextColors } = createRoundStartBoard(
     theme,
     get().gameplaySettings.clearBoardOnNewRound,
+    get().gameplaySettings.randomFillRatio,
   );
   syncSharedGrid(nextGrid);
 
@@ -389,6 +408,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
   justPlaced: [],
   placedCellScores: [],
   isAnimatingClear: false,
+  isAnimatingPerfectClear: false,
   lastMoodIndex: 0,
   moodVisible: false,
   feedbackVisible: false,
@@ -407,6 +427,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
   highScoreCelebratedThisRound: false,
   savedMoment: false,
 
+  activeSession: null,
   initGame: () => {
     if (clearTimer) {
       clearTimeout(clearTimer);
@@ -420,6 +441,10 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       clearTimeout(feedbackTimer);
       feedbackTimer = null;
     }
+    if (perfectClearTimer) {
+      clearTimeout(perfectClearTimer);
+      perfectClearTimer = null;
+    }
     clearNewRoundTimers();
     pendingMove = null;
     pendingColors = null;
@@ -432,6 +457,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
     const { grid: startGrid, colors: startColors } = createRoundStartBoard(
       theme,
       get().gameplaySettings.clearBoardOnNewRound,
+      get().gameplaySettings.randomFillRatio,
     );
     syncSharedGrid(startGrid);
 
@@ -451,6 +477,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       clearingColumns: [],
       justPlaced: [],
       isAnimatingClear: false,
+      isAnimatingPerfectClear: false,
       moodVisible: false,
       feedbackVisible: false,
       lastScoreBreakdown: null,
@@ -464,7 +491,10 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       savedMoment: false,
       boardEpoch: get().boardEpoch + 1,
     });
-    get().cycleRandomTheme();
+    get().clearActiveSession();
+    if (get().gameplaySettings.randomThemeOnNewRound) {
+      get().cycleRandomTheme();
+    }
   },
 
   persistGameOverIfNeeded: () => {
@@ -490,6 +520,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       dangerState: null,
     });
     invalidateDangerFeedback();
+    get().clearActiveSession();
     get().persistGameOverIfNeeded();
   },
 
@@ -507,10 +538,38 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       ghost: null,
       dragOverlay: null,
     });
+    get().clearActiveSession();
     get().persistGameOverIfNeeded();
   },
 
   beginClassicSession: () => {
+    const { activeSession } = get();
+    if (activeSession && activeSession.grid?.length) {
+      preloadThemeSounds(activeSession.currentTheme);
+      syncSharedGrid(activeSession.grid);
+      set({
+        grid: cloneGrid(activeSession.grid),
+        cellColors: cloneColorGrid(activeSession.cellColors),
+        currentPieces: activeSession.currentPieces,
+        score: activeSession.score,
+        combo: activeSession.combo ?? 0,
+        currentTheme: activeSession.currentTheme,
+        boardEpoch: activeSession.boardEpoch ?? 0,
+        isGameOver: false,
+        newRoundPhase: 'idle',
+        ghost: null,
+        dragOverlay: null,
+        clearingRows: [],
+        clearingColumns: [],
+        justPlaced: [],
+        placedCellScores: [],
+        isAnimatingClear: false,
+        moodVisible: false,
+        feedbackVisible: false,
+      });
+      invalidateDangerFeedback();
+      return;
+    }
     get().initGame();
   },
 
@@ -546,9 +605,12 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
     pendingThemeCycle = false;
 
     const highScore = get().highScore;
-    const nextTheme = pickRandomTheme(get().currentTheme);
+    const nextTheme = get().gameplaySettings.randomThemeOnNewRound
+      ? pickRandomTheme(get().currentTheme)
+      : get().currentTheme;
     applyFreshRoundState(set, get, highScore, nextTheme, get().boardEpoch + 1);
     preloadThemeSounds(nextTheme);
+    get().clearActiveSession();
     AsyncStorage.removeItem(LAST_GAME_OVER_KEY).catch(error =>
       console.error('Failed to clear cached game over:', error),
     );
@@ -601,24 +663,32 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
     // Fast synchronous validation
     if (!gameEngine.canPlaceBlock(current.grid, block, position)) return false;
 
-    // Execute synchronously to avoid frame tearing and visual lag on drop
+    // Execute in next frame to avoid frame tearing and visual lag on drop
     const stateBeforeExecution = get();
     if (stateBeforeExecution.isGameOver) {
-      if (onPlaced) onPlaced();
+      if (onPlaced) onPlaced(false);
       return false;
     }
 
-    const result = gameEngine.executeMove(stateBeforeExecution, block, position, {
-      comboMode: stateBeforeExecution.comboMode,
-      blockGenSettings: stateBeforeExecution.blockGenSettings,
-    });
-    syncSharedGrid(result.gridAfterPlace);
-    const paintColor = getThemePaintColor(resolveTheme(current.currentTheme), block.color);
-    const colorsAfterPlace = applyBlockColors(
-      current.cellColors,
-      { ...block, color: paintColor },
-      position,
-    );
+    requestAnimationFrame(() => {
+      try {
+        const currentInner = get();
+        if (currentInner.isAnimatingClear) {
+          if (onPlaced) onPlaced(false);
+          return;
+        }
+
+      const result = gameEngine.executeMove(stateBeforeExecution, block, position, {
+        comboMode: stateBeforeExecution.comboMode,
+        blockGenSettings: stateBeforeExecution.blockGenSettings,
+      });
+      syncSharedGrid(result.gridAfterPlace);
+      const paintColor = getThemePaintColor(resolveTheme(currentInner.currentTheme), block.color);
+      const colorsAfterPlace = applyBlockColors(
+        currentInner.cellColors,
+        { ...block, color: paintColor },
+        position,
+      );
 
       // Floating +N uses real placement points (10 per cell), not hardcoded 1
       const cells = Math.max(result.placedPositions.length, 1);
@@ -665,14 +735,14 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
 
         // Frame 1: board + clear tint only (no feedback / particles UI pile-up)
         set({
-          grid: result.gridAfterPlace,
-          currentPieces: result.state.currentPieces,
-          cellColors: colorsAfterPlace,
+          ...result.state,
           clearingRows: result.clearedRows,
           clearingColumns: result.clearedColumns,
           justPlaced: result.placedPositions,
-          placedCellScores: EMPTY_ARRAY,
           isAnimatingClear: true,
+          isAnimatingPerfectClear: !!result.isPerfectClear,
+          cellColors: colorsAfterPlace,
+          placedCellScores: EMPTY_ARRAY,
           ghost: null,
           dragOverlay: null,
           score: result.state.score,
@@ -716,6 +786,13 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
           feedbackTimer = setTimeout(() => {
             set({ feedbackVisible: false });
           }, ANIMATION.SCORE_POPUP);
+          
+          if (result.isPerfectClear) {
+            if (perfectClearTimer) clearTimeout(perfectClearTimer);
+            perfectClearTimer = setTimeout(() => {
+              set({ isAnimatingPerfectClear: false });
+            }, 1000);
+          }
         }, ANIMATION.PLACE_FX_DEFER_MS);
 
         setTimeout(() => {
@@ -724,11 +801,11 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
           }
         }, ANIMATION.PLACE_FX_DEFER_MS + ANIMATION.FLOATING_SCORE_MS);
 
-        if (onPlaced) onPlaced();
         return true;
       }
 
       // Non-clear: paint board first, defer sound / danger / +N
+      playThemeSound(get().currentTheme, 'place', DRAG.PLACE_VOLUME);
       set({
         ...result.state,
         isGameOver: false,
@@ -746,6 +823,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       const nextHigh = result.state.highScore;
       const prevHigh = current.highScore;
       scheduleDangerFeedback(get, set, placedScores, true);
+      get().saveActiveSessionIfNeeded();
 
       if (beatHighScore) {
         setTimeout(() => {
@@ -760,7 +838,14 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
         }
       }, ANIMATION.PLACE_FX_DEFER_MS + ANIMATION.FLOATING_SCORE_MS);
 
-      if (onPlaced) onPlaced();
+      } catch (err) {
+        console.error('Error during block placement:', err);
+        set({ dragOverlay: null, ghost: null });
+        let isSuccess = false;
+      } finally {
+        if (onPlaced) onPlaced(!get().isGameOver); // Roughly determine success
+      }
+    }); // end requestAnimationFrame
 
     return true;
   },
@@ -783,8 +868,13 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
     pendingColors = null;
     clearTimer = null;
 
-    // Play clear sound (fire-and-forget)
-    void playThemeSound(get().currentTheme, 'clear', DRAG.CLEAR_VOLUME);
+    // Play dynamic clear sound with combo pitch scaling & multi-line intensity
+    const totalLines = move.clearedRows.length + move.clearedColumns.length;
+    void playThemeSound(get().currentTheme, 'clear', {
+      volume: DRAG.CLEAR_VOLUME,
+      combo: move.state.combo,
+      linesCount: totalLines,
+    });
 
     // Paint cleared board FIRST — fast path, no heavy computation
     syncSharedGrid(move.state.grid);
@@ -827,8 +917,11 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
 
       if (pendingThemeCycle) {
         pendingThemeCycle = false;
-        get().cycleRandomTheme();
+        if (get().gameplaySettings.randomThemeOnNewRound) {
+          get().cycleRandomTheme();
+        }
       }
+      get().saveActiveSessionIfNeeded();
     }, 0);
   },
 
@@ -868,6 +961,15 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       await AsyncStorage.setItem(HIGH_SCORE_KEY, score.toString());
     } catch (error) {
       console.error('Failed to save high score:', error);
+    }
+  },
+
+  resetHighScore: async () => {
+    try {
+      set({ highScore: 0, newHighScore: null });
+      await AsyncStorage.removeItem(HIGH_SCORE_KEY);
+    } catch (error) {
+      console.error('Failed to reset high score:', error);
     }
   },
 
@@ -959,10 +1061,50 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       set({ gameplaySettings: { ...DEFAULT_GAMEPLAY_SETTINGS } });
     }
   },
+
+  saveActiveSessionIfNeeded: () => {
+    const state = get();
+    if (state.isGameOver || state.newRoundPhase !== 'idle') return;
+
+    const snapshot: ActiveSessionSnapshot = {
+      grid: cloneGrid(state.grid),
+      cellColors: cloneColorGrid(state.cellColors),
+      currentPieces: state.currentPieces,
+      score: state.score,
+      combo: state.combo,
+      currentTheme: state.currentTheme,
+      boardEpoch: state.boardEpoch,
+    };
+    set({ activeSession: snapshot });
+    void AsyncStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(snapshot)).catch((err) =>
+      console.error('Failed to save active session:', err),
+    );
+  },
+
+  clearActiveSession: () => {
+    set({ activeSession: null });
+    void AsyncStorage.removeItem(ACTIVE_SESSION_KEY).catch((err) =>
+      console.error('Failed to clear active session:', err),
+    );
+  },
+
+  loadActiveSession: async () => {
+    try {
+      const stored = await AsyncStorage.getItem(ACTIVE_SESSION_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as ActiveSessionSnapshot;
+      if (parsed?.grid?.length && parsed?.cellColors?.length) {
+        set({ activeSession: parsed });
+      }
+    } catch (error) {
+      console.error('Failed to load active session:', error);
+    }
+  },
 }));
 
 useGameStore.getState().loadHighScore();
 useGameStore.getState().loadLastGameOver();
+useGameStore.getState().loadActiveSession();
 useGameStore.getState().loadComboMode();
 useGameStore.getState().loadBlockGenSettings();
 useGameStore.getState().loadGameplaySettings();

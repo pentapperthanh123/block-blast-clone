@@ -11,7 +11,7 @@ import { ThemeConfig } from '../constants/themes';
  * Generate a random initial grid with 10-20% cells filled
  * Ensures no full rows or columns exist
  */
-export function createRandomInitialGrid(theme: ThemeConfig): {
+export function createRandomInitialGrid(theme: ThemeConfig, fillRatio: number = 0.15): {
   grid: number[][];
   colors: ColorGrid;
 } {
@@ -23,10 +23,7 @@ export function createRandomInitialGrid(theme: ThemeConfig): {
   );
 
   const totalCells = GRID_SIZE * GRID_SIZE;
-  const minCells = Math.floor(totalCells * 0.1);
-  const maxCells = Math.floor(totalCells * 0.2);
-  const targetCells =
-    Math.floor(Math.random() * (maxCells - minCells + 1)) + minCells;
+  const targetCells = Math.floor(totalCells * fillRatio);
 
   const rowCounts = Array(GRID_SIZE).fill(0);
   const colCounts = Array(GRID_SIZE).fill(0);
@@ -71,13 +68,14 @@ export function createRandomInitialGrid(theme: ThemeConfig): {
 export function createRoundStartBoard(
   theme: ThemeConfig,
   clearBoardOnNewRound: boolean,
+  randomFillRatio: number,
 ): {
   grid: number[][];
   colors: ColorGrid;
 } {
   return clearBoardOnNewRound
     ? createEmptyGrid()
-    : createRandomInitialGrid(theme);
+    : createRandomInitialGrid(theme, randomFillRatio);
 }
 
 /**

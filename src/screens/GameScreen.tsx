@@ -19,19 +19,19 @@ import { NewHighScoreEffect } from '../components/game/NewHighScoreEffect';
 import { CandyBackground } from '../components/home';
 import { THEMES } from '../constants/themes';
 import { DevMenuOverlay } from '../components/dev/DevMenuOverlay';
+import type { FeedbackTier } from '../engine/ScoreCalculator';
+import { PerfectClearCelebration } from '@/components/game/PerfectClearCelebration';
 
-export const GameScreen: React.FC = () => {
-  const isGameOver = useGameStore((s) => s.isGameOver);
-  const newRoundPhase = useGameStore((s) => s.newRoundPhase);
-  const lastScoreBreakdown = useGameStore((s) => s.lastScoreBreakdown);
-  const feedbackVisible = useGameStore((s) => s.feedbackVisible);
-  const placedCellScores = useGameStore((s) => s.placedCellScores);
-  const showHighScoreCelebration = useGameStore((s) => s.showHighScoreCelebration);
-  const newHighScore = useGameStore((s) => s.newHighScore);
-  const hideHighScoreCelebration = useGameStore((s) => s.hideHighScoreCelebration);
-  const currentTheme = useGameStore((s) => s.currentTheme);
-  const palette = THEMES[currentTheme]?.palette ?? THEMES.ocean.palette;
-  const [boardLayout, setBoardLayout] = useState<BoardLayout | null>(null);
+const getMascotEmotion = (tier?: FeedbackTier): 'calm' | 'happy' | 'excited' | 'shocked' => {
+  switch (tier) {
+    case 'Unbelievable': return 'shocked';
+    case 'Awesome': return 'excited';
+    case 'Perfect': return 'happy';
+    default: return 'calm';
+  }
+};
+
+function useOverlayOrigin() {
   const [overlayOrigin, setOverlayOrigin] = useState({ x: 0, y: 0 });
   const containerRef = useRef<RNView>(null);
 
@@ -50,27 +50,37 @@ export const GameScreen: React.FC = () => {
     };
   }, [measureOverlayOrigin]);
 
+  return { containerRef, overlayOrigin, measureOverlayOrigin };
+}
+
+export const GameScreen: React.FC = () => {
+  const isGameOver = useGameStore((s) => s.isGameOver);
+  const newRoundPhase = useGameStore((s) => s.newRoundPhase);
+  const lastScoreBreakdown = useGameStore((s) => s.lastScoreBreakdown);
+  const feedbackVisible = useGameStore((s) => s.feedbackVisible);
+  const placedCellScores = useGameStore((s) => s.placedCellScores);
+  const showHighScoreCelebration = useGameStore((s) => s.showHighScoreCelebration);
+  const newHighScore = useGameStore((s) => s.newHighScore);
+  const hideHighScoreCelebration = useGameStore((s) => s.hideHighScoreCelebration);
+  const currentTheme = useGameStore((s) => s.currentTheme);
+  const palette = THEMES[currentTheme]?.palette ?? THEMES.ocean.palette;
+  const { containerRef, overlayOrigin, measureOverlayOrigin } = useOverlayOrigin();
+  const [boardLayout, setBoardLayout] = useState<BoardLayout | null>(null);
+
   const onBoardLayout = useCallback((layout: BoardLayout) => {
     setBoardLayout(layout);
   }, []);
 
   const inTransition = newRoundPhase !== 'idle';
-  
-  const mascotEmotion = lastScoreBreakdown
-    ? lastScoreBreakdown.feedbackTier === 'Unbelievable'
-      ? 'shocked'
-      : lastScoreBreakdown.feedbackTier === 'Awesome' ||
-          lastScoreBreakdown.feedbackTier === 'Perfect'
-        ? 'excited'
-        : 'happy'
-    : 'happy';
 
-  const showMascot =
-    feedbackVisible &&
-    !!lastScoreBreakdown &&
-    (lastScoreBreakdown.feedbackTier === 'Perfect' ||
-      lastScoreBreakdown.feedbackTier === 'Awesome' ||
-      lastScoreBreakdown.feedbackTier === 'Unbelievable');
+  const isAnimatingPerfectClear = useGameStore((s) => s.isAnimatingPerfectClear);
+
+  const mascotEmotion = getMascotEmotion(lastScoreBreakdown?.feedbackTier);
+  const combo = useGameStore((s) => s.combo);
+  
+  // Only show mascot if it's not a basic 'Good' (1 line) clear, unless it's a combo
+  const isBasicGood = lastScoreBreakdown?.feedbackTier === 'Good' && combo <= 1;
+  const showMascot = feedbackVisible && !!lastScoreBreakdown && !isAnimatingPerfectClear && !isBasicGood;
 
   return (
     <View ref={containerRef} onLayout={measureOverlayOrigin} style={[styles.container, { backgroundColor: palette.background }]}>
@@ -100,9 +110,8 @@ export const GameScreen: React.FC = () => {
           </View>
         </View>
       </View>
-
       <BlockTray boardLayout={boardLayout} />
-      <FeedbackOverlay />
+      {!isAnimatingPerfectClear && <FeedbackOverlay />}
       <DragOverlay
         originX={overlayOrigin.x}
         originY={overlayOrigin.y}
@@ -111,6 +120,9 @@ export const GameScreen: React.FC = () => {
 
       {/* Cute mascot appears on high combos */}
       <CuteMascot visible={showMascot} emotion={mascotEmotion} />
+
+      {/* 2 Mascots + Confetti for Perfect Clear */}
+      <PerfectClearCelebration />
 
       {/* New High Score Celebration */}
       <NewHighScoreEffect

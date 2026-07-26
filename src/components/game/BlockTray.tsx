@@ -20,7 +20,7 @@ interface BlockTrayProps {
   boardLayout: BoardLayout | null;
 }
 
-export const BlockTray: React.FC<BlockTrayProps> = ({ boardLayout }) => {
+export const BlockTray = React.memo<BlockTrayProps>(({ boardLayout }) => {
   const currentPieces = useGameStore((s) => s.currentPieces);
   const isAnimatingClear = useGameStore((s) => s.isAnimatingClear);
   const newRoundPhase = useGameStore((s) => s.newRoundPhase);
@@ -38,13 +38,14 @@ export const BlockTray: React.FC<BlockTrayProps> = ({ boardLayout }) => {
       (prevPhase.current === 'falling' || prevPhase.current === 'revealing') &&
       newRoundPhase === 'idle'
     ) {
-      fall.value = 1;
+      // Fix Reanimated race condition: do not synchronously set to 1 before withTiming
       fall.value = withTiming(0, {
         duration: ANIMATION.NEW_ROUND_REVEAL_FADE_MS,
         easing: Easing.out(Easing.cubic),
       });
     } else {
-      fall.value = 0;
+      // Force reset to 0 to prevent getting stuck
+      fall.value = withTiming(0, { duration: 50 });
     }
     prevPhase.current = newRoundPhase;
   }, [newRoundPhase, fall]);
@@ -57,9 +58,16 @@ export const BlockTray: React.FC<BlockTrayProps> = ({ boardLayout }) => {
     ],
   }));
 
+  const feedbackVisible = useGameStore((s) => s.feedbackVisible);
+  const showHighScoreCelebration = useGameStore((s) => s.showHighScoreCelebration);
+  const isAnimatingPerfectClear = useGameStore((s) => s.isAnimatingPerfectClear);
+
   const slots = [0, 1, 2].map((index) => currentPieces[index] ?? null);
   const inputLocked =
     isAnimatingClear ||
+    feedbackVisible ||
+    showHighScoreCelebration ||
+    isAnimatingPerfectClear ||
     newRoundPhase === 'recap' ||
     newRoundPhase === 'falling' ||
     newRoundPhase === 'revealing';
@@ -76,6 +84,7 @@ export const BlockTray: React.FC<BlockTrayProps> = ({ boardLayout }) => {
         >
           {block ? (
             <DraggableBlock
+              key={`draggable-${index}-${block.id}`}
               block={block}
               index={index}
               boardLayout={boardLayout}
@@ -88,7 +97,7 @@ export const BlockTray: React.FC<BlockTrayProps> = ({ boardLayout }) => {
       ))}
     </Animated.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   tray: {

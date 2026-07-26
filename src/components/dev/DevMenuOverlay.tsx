@@ -4,7 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { sharedClearMask } from '../../utils/sharedGrid';
 import { dragActive, ghostValid } from '../../utils/dragShared';
 
-export const DevMenuOverlay: React.FC = () => {
+export const DevMenuOverlay = React.memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const currentTheme = useGameStore((s) => s.currentTheme);
 
@@ -16,6 +16,9 @@ export const DevMenuOverlay: React.FC = () => {
       feedbackVisible: false,
     });
     setTimeout(() => {
+      import('../../constants/voiceFeedback').then(({ playVoiceFeedback, getVoiceVolume }) => {
+        playVoiceFeedback(tier, getVoiceVolume(tier));
+      });
       useGameStore.setState((s) => ({
         feedbackVisible: true,
         feedbackNonce: (s.feedbackNonce || 0) + 1,
@@ -26,6 +29,10 @@ export const DevMenuOverlay: React.FC = () => {
           feedbackTier: tier,
         },
       }));
+
+      setTimeout(() => {
+        useGameStore.setState({ feedbackVisible: false });
+      }, 1400); // Match ANIMATION.SCORE_POPUP
     }, 50);
   };
 
@@ -37,6 +44,41 @@ export const DevMenuOverlay: React.FC = () => {
         showHighScoreCelebration: true,
         newHighScore: 9999,
       });
+    }, 50);
+  };
+
+  const triggerPerfectClear = () => {
+    setIsOpen(false);
+    useGameStore.setState({ 
+      isAnimatingPerfectClear: false,
+      feedbackVisible: false 
+    });
+    
+    setTimeout(() => {
+      // Trigger voice and popup score like a real perfect clear
+      import('../../constants/voiceFeedback').then(({ playVoiceFeedback, getVoiceVolume }) => {
+        playVoiceFeedback('Unbelievable', getVoiceVolume('Unbelievable'));
+      });
+      
+      useGameStore.setState((s) => ({
+        isAnimatingPerfectClear: true,
+        feedbackVisible: true,
+        feedbackNonce: (s.feedbackNonce || 0) + 1,
+        lastScoreBreakdown: {
+          points: 15000,
+          linesCleared: 5,
+          comboMultiplier: 10,
+          feedbackTier: 'Unbelievable',
+        },
+      }));
+      
+      // Reset state after animation completes
+      setTimeout(() => {
+        useGameStore.setState({ 
+          isAnimatingPerfectClear: false,
+          feedbackVisible: false
+        });
+      }, 3500);
     }, 50);
   };
 
@@ -100,6 +142,9 @@ export const DevMenuOverlay: React.FC = () => {
                 <TouchableOpacity style={styles.actionBtn} onPress={triggerHighScore}>
                   <Text style={styles.actionText}>New High Score</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn} onPress={triggerPerfectClear}>
+                  <Text style={styles.actionText}>Perfect Clear</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn} onPress={previewGlowLine}>
                   <Text style={styles.actionText}>Preview Glow Line</Text>
                 </TouchableOpacity>
@@ -121,7 +166,7 @@ export const DevMenuOverlay: React.FC = () => {
       </Modal>
     </>
   );
-};
+});
 
 const styles = StyleSheet.create({
   triggerButton: {

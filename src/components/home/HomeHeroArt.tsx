@@ -88,8 +88,7 @@ export const HomeHeroArt: React.FC = () => {
       withTiming(-10, {
         duration: 1800,
         easing: Easing.inOut(Easing.sin),
-      }),
-      -1,
+      }), 999999,
       true,
     );
   }, [bob, reduceMotion]);

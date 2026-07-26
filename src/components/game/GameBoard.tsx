@@ -541,14 +541,17 @@ const BoardCell: React.FC<BoardCellProps> = React.memo(({
       4,
       true,
     );
-    opacity.value = withRepeat(
-      withTiming(0.35, { duration: BOARD_CONSTANTS.CLEAR_FLASH_DURATION_MS }),
-      4,
-      true,
+    opacity.value = withSequence(
+      withRepeat(
+        withTiming(0.35, { duration: BOARD_CONSTANTS.CLEAR_FLASH_DURATION_MS }),
+        3,
+        true,
+      ),
+      withTiming(0, { duration: BOARD_CONSTANTS.CLEAR_FLASH_DURATION_MS })
     );
     scale.value = withSequence(
       withTiming(1.2, { duration: 100 }),
-      withTiming(0.15, { duration: 200 }),
+      withTiming(0, { duration: 200 }),
     );
     return () => {
       flash.value = 0;

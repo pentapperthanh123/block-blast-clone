@@ -22,7 +22,7 @@ export class GameEngine {
     private lineDetector: LineDetector,
     private blockGenerator: BlockGenerator,
     private scoreCalculator: ScoreCalculator
-  ) {}
+  ) { }
 
   /**
    * Initialize a new game
@@ -37,6 +37,7 @@ export class GameEngine {
       isGameOver: false,
       combo: 0,
       movesWithoutClear: 0,
+      perfectClears: 0,
     };
   }
 
@@ -77,27 +78,37 @@ export class GameEngine {
       newCombo = this.scoreCalculator.updateCombo(newCombo, 0, comboMode);
     }
 
+    const newMovesWithoutClear = hasLines ? 0 : state.movesWithoutClear + 1;
+
+    let newPerfectClears = state.perfectClears || 0;
+    const isEmptyGrid = finalGrid.every((row) =>
+      row.every((cell) => cell === CellState.Empty),
+    );
+
+    let isPerfectClear = false;
+    if (isEmptyGrid && hasLines) {
+      newPerfectClears += 1;
+      isPerfectClear = true;
+      // Bonus points for perfect clear
+      lineClearPoints += 1000 * newPerfectClears;
+    }
+
     const newScore = state.score + placementPoints + lineClearPoints;
     const newHighScore = this.scoreCalculator.isHighScore(newScore, state.highScore)
       ? newScore
       : state.highScore;
 
-    const newMovesWithoutClear = hasLines ? 0 : state.movesWithoutClear + 1;
-
     const newCurrentPieces = state.currentPieces.map((p) =>
       p && p.id === block.id ? null : p
     );
     const allSlotsEmpty = newCurrentPieces.every((p) => p === null);
-    const isEmptyGrid = finalGrid.every((row) =>
-      row.every((cell) => cell === CellState.Empty),
-    );
     const finalCurrentPieces = allSlotsEmpty
       ? this.blockGenerator.generateBlockSet(3, finalGrid, {
-          afterFullClear: isEmptyGrid,
-          afterLineClear: hasLines,
-          movesWithoutClear: newMovesWithoutClear,
-          settings: options?.blockGenSettings,
-        })
+        afterFullClear: isEmptyGrid,
+        afterLineClear: hasLines,
+        movesWithoutClear: newMovesWithoutClear,
+        settings: options?.blockGenSettings,
+      })
       : newCurrentPieces;
 
     // Game-over detection is deferred to the store layer (confirmGameOverIfDeadlocked)
@@ -105,6 +116,7 @@ export class GameEngine {
 
     return {
       state: {
+        ...state,
         grid: finalGrid,
         score: newScore,
         highScore: newHighScore,
@@ -112,14 +124,16 @@ export class GameEngine {
         isGameOver: false,
         combo: newCombo,
         movesWithoutClear: newMovesWithoutClear,
+        perfectClears: newPerfectClears,
       },
-      gridAfterPlace,
+      gridAfterPlace: finalGrid,
       placedPositions,
-      clearedRows: detectedLines.rows,
-      clearedColumns: detectedLines.columns,
+      clearedRows: hasLines ? detectedLines.rows : [],
+      clearedColumns: hasLines ? detectedLines.columns : [],
       pointsFromPlacement: placementPoints,
       pointsFromClear: lineClearPoints,
       scoreBreakdown,
+      isPerfectClear,
       isFullClear: isEmptyGrid,
     };
   }

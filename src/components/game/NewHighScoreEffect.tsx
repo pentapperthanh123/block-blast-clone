@@ -25,7 +25,7 @@ interface NewHighScoreEffectProps {
   onComplete?: () => void;
 }
 
-export const NewHighScoreEffect: React.FC<NewHighScoreEffectProps> = ({
+export const NewHighScoreEffect = React.memo<NewHighScoreEffectProps>(({
   visible,
   newScore,
   onComplete,
@@ -90,7 +90,7 @@ export const NewHighScoreEffect: React.FC<NewHighScoreEffectProps> = ({
           withTiming(0.8, { duration: 800, easing: Easing.inOut(Easing.ease) }),
           withTiming(0.3, { duration: 800, easing: Easing.inOut(Easing.ease) })
         ),
-        -1, // Infinite
+        999999, // Infinite
         true
       )
     );
@@ -163,10 +163,10 @@ export const NewHighScoreEffect: React.FC<NewHighScoreEffectProps> = ({
       </Animated.View>
     </Animated.View>
   );
-};
+});
 
 // Individual particle component
-const Particle: React.FC<{ index: number }> = ({ index }) => {
+const Particle = React.memo<{ index: number }>(({ index }) => {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(0);
@@ -227,7 +227,7 @@ const Particle: React.FC<{ index: number }> = ({ index }) => {
   return (
     <Animated.View style={[styles.particle, particleStyle, { backgroundColor: color }]} />
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

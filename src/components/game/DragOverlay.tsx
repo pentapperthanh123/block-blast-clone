@@ -33,7 +33,7 @@ interface DragOverlayProps {
   boardLayout: BoardLayout | null;
 }
 
-const DragOverlayPiece = ({
+const DragOverlayPiece = React.memo(({
   block,
   index,
   originX,
@@ -133,9 +133,9 @@ const DragOverlayPiece = ({
       </Animated.View>
     </>
   );
-};
+});
 
-export const DragOverlay: React.FC<DragOverlayProps> = ({
+export const DragOverlay = React.memo<DragOverlayProps>(({
   originX,
   originY,
   boardLayout,
@@ -169,7 +169,7 @@ export const DragOverlay: React.FC<DragOverlayProps> = ({
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   root: {
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const GlowLine = ({ index, isRow, boardLayout, originX, originY }: { index: number, isRow: boolean, boardLayout: BoardLayout, originX: number, originY: number }) => {
+const GlowLine = React.memo(({ index, isRow, boardLayout, originX, originY }: { index: number, isRow: boolean, boardLayout: BoardLayout, originX: number, originY: number }) => {
   const animStyle = useAnimatedStyle(() => {
     const valid = ghostValid.value;
     if (!valid || !dragActive.value) return { opacity: withTiming(0, { duration: 100 }) };
@@ -233,4 +233,4 @@ const GlowLine = ({ index, isRow, boardLayout, originX, originY }: { index: numb
        <View style={styles.glowInner} />
     </Animated.View>
   );
-};
+});

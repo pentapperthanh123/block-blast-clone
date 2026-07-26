@@ -75,12 +75,23 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   const dropInFlightRef = useRef(false);
 
   useEffect(() => {
+    dragging.value = 0;
+    tx.value = 0;
+    ty.value = 0;
+    dropHandled.value = 0;
+  }, [block.id, dragging, tx, ty, dropHandled]);
+
+  useEffect(() => {
     return () => {
       if (ghostFrameRef.current != null) {
         cancelAnimationFrame(ghostFrameRef.current);
       }
+      // Failsafe: If this component is unmounting but still holds the global drag lock, release it
+      if (dragActive.value === 1 && dragIndex.value === index) {
+        dragActive.value = 0;
+      }
     };
-  }, []);
+  }, [index]);
 
   useEffect(() => {
     if (!boardLayout) {
@@ -186,7 +197,7 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     setDragOverlay(null);
   };
 
-  const finishDrop = (pageX: number, pageY: number) => {
+  const finishDrop = (pageX: number, pageY: number, isValid: boolean, ghostR: number, ghostC: number) => {
     if (dropInFlightRef.current) return;
 
     const layout = boardLayoutRef.current;
@@ -195,7 +206,7 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
       return;
     }
 
-    const origin = ghostValid.value ? { row: ghostRow.value, col: ghostCol.value } : null;
+    const origin = isValid ? { row: ghostR, col: ghostC } : null;
 
     if (!origin) {
       cancelDrag();
@@ -220,10 +231,12 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     dragPageY.value = snapY;
 
     // Async placement: store immediately returns true if valid, but defers calculation
-    const placed = placeBlock(block, origin, () => {
+    const placed = placeBlock(block, origin, (success) => {
       // Hide UI-thread overlay after board is already updated
       dragActive.value = 0;
-      dragging.value = 0;
+      if (!success) {
+        dragging.value = 0;
+      }
       dropInFlightRef.current = false;
     });
     resetSnap();
@@ -242,7 +255,10 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     resetSnap();
     sharedClearMask.value = 0;
     
-    // Fallback: we still set drag overlay to show the exact piece under the finger
+    // Play snappy theme pickup sound when lifting block
+    playThemeSound(currentTheme, 'dragStart', 0.85);
+
+    // Fallback: set drag overlay
     setDragOverlay({ block, pageX, pageY });
   };
 
@@ -256,6 +272,10 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     })
     .onBegin((e) => {
       'worklet';
+      if (dragActive.value === 1 && dragIndex.value !== -1 && dragIndex.value !== index) return;
+      // Prevent picking up a piece that was just successfully placed and is waiting to unmount
+      if (dragging.value === 1) return;
+      
       dropHandled.value = 0;
       dragging.value = 1;
       tx.value = 0;
@@ -284,6 +304,8 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     })
     .onUpdate((e) => {
       'worklet';
+      if (dragActive.value === 1 && dragIndex.value !== -1 && dragIndex.value !== index) return;
+      
       tx.value = e.translationX;
       ty.value = e.translationY;
       const x = e.absoluteX > 0 ? e.absoluteX : dragPageX.value;
@@ -338,14 +360,22 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
     })
     .onEnd((e) => {
       'worklet';
+      if (dragActive.value === 1 && dragIndex.value !== -1 && dragIndex.value !== index) return;
+      
       dropHandled.value = 1;
       let px = e.absoluteX > 0 ? e.absoluteX : dragPageX.value;
       let py = e.absoluteY > 0 ? e.absoluteY : dragPageY.value;
       tx.value = 0;
       ty.value = 0;
 
+      let snapPx = px;
+      let snapPy = py;
+      const isValid = ghostValid.value === 1;
+      const r = ghostRow.value;
+      const c = ghostCol.value;
+
       // INSTANT SNAP ON UI THREAD (Zero Latency)
-      if (ghostValid.value === 1 && hasLayout.value === 1) {
+      if (isValid && hasLayout.value === 1) {
         const shape = block.shape as unknown as number[][];
         const rows = shape.length;
         const cols = shape[0].length;
@@ -354,17 +384,19 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
         const innerX = layoutX.value + BOARD_BORDER_PAD;
         const innerY = layoutY.value + BOARD_BORDER_PAD;
         
-        px = innerX + ghostCol.value * layoutCell.value + width / 2;
-        py = innerY + ghostRow.value * layoutCell.value + height / 2 + cellVisual * LIFT_RATIO;
+        snapPx = innerX + c * layoutCell.value + width / 2;
+        snapPy = innerY + r * layoutCell.value + height / 2 + cellVisual * LIFT_RATIO;
       }
       
-      dragPageX.value = px;
-      dragPageY.value = py;
+      dragPageX.value = snapPx;
+      dragPageY.value = snapPy;
 
-      runOnJS(finishDrop)(px, py);
+      runOnJS(finishDrop)(px, py, isValid, r, c);
     })
     .onFinalize(() => {
       'worklet';
+      if (dragActive.value === 1 && dragIndex.value !== -1 && dragIndex.value !== index) return;
+      
       if (dropHandled.value) {
         dropHandled.value = 0;
         return;

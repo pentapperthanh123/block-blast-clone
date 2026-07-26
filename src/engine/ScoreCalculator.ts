@@ -24,10 +24,10 @@ export class ScoreCalculator {
 
   private readonly LINE_CLEAR_BASES = {
     1: 100,
-    2: 300,
-    3: 800,
-    4: 1500,
-    5: 2500,
+    2: 400,
+    3: 1200,
+    4: 3000,
+    5: 5000,
   };
 
   calculateBaseClearScore(linesCleared: number): number {
@@ -41,7 +41,8 @@ export class ScoreCalculator {
 
   getComboMultiplier(currentCombo: number): number {
     if (currentCombo <= 0) return 1.0;
-    return Math.min(1.0 + currentCombo * 0.2, 4.0);
+    // Multiplier scales faster (0.5 per combo, cap at 10x)
+    return Math.min(1.0 + currentCombo * 0.5, 10.0);
   }
 
   getFeedbackTier(linesCleared: number): FeedbackTier {

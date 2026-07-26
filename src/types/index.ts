@@ -42,6 +42,8 @@ export interface GameState {
   combo: number;
   /** Placements since last line clear — drives dry-spell spawn relief */
   movesWithoutClear: number;
+  /** Number of times the entire board was cleared in the current round */
+  perfectClears: number;
 }
 
 /** Parallel color map for filled cells (null = empty) */
@@ -98,5 +100,7 @@ export interface MoveResult {
     finalPoints: number;
     feedbackTier: 'Good' | 'Perfect' | 'Awesome' | 'Unbelievable';
   };
+  /** Indicates a perfect clear happened in this move */
+  isPerfectClear?: boolean;
   isFullClear?: boolean;
 }

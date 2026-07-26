@@ -55,22 +55,22 @@ export const ANIMATION = {
   BLOCK_PLACE: 220,
   /** Line clear FX duration — keep short so input unlocks sooner */
   LINE_CLEAR: 360,
-  COMBO_TEXT: 800,
+  COMBO_TEXT: 1000,
   SCORE_POPUP: 1400,
-  /** Floating +N lifetime after place */
-  FLOATING_SCORE_MS: 700,
+  /** Floating +N lifetime after place (increased to allow full animation) */
+  FLOATING_SCORE_MS: 1200,
   /** Defer heavy UI (feedback / particles follow-up) after board paints */
   PLACE_FX_DEFER_MS: 32,
   LOADING_MS: 1800,
-  NEW_ROUND_RECAP_MS: 1100,
+  NEW_ROUND_RECAP_MS: 150,
   /** Hide losing board one frame before swapping grid */
-  NEW_ROUND_REVEAL_BUFFER_MS: 48,
+  NEW_ROUND_REVEAL_BUFFER_MS: 32,
   /** Fade-in for the fresh grid after swap */
-  NEW_ROUND_REVEAL_FADE_MS: 420,
+  NEW_ROUND_REVEAL_FADE_MS: 150,
   /** Cascade fall — synced via getMaxBoardFallMs() */
-  NEW_ROUND_FALL_MS: 1520,
+  NEW_ROUND_FALL_MS: 500,
   /** Legacy alias — fall replaced wipe */
-  NEW_ROUND_WIPE_MS: 1500,
+  NEW_ROUND_WIPE_MS: 500,
 } as const;
 
 export const BOARD_CONSTANTS = {
@@ -86,13 +86,13 @@ export const BOARD_CONSTANTS = {
   /** Skins render inside the cell — no bleed (keeps grid even) */
   SKIN_BLEED: 1,
   GHOST_OPACITY: 0.4,
-  FALL_ROW_STAGGER_MS: 55,
-  FALL_COL_STAGGER_MS: 22,
-  FALL_DURATION_MS: 620,
-  FALL_FADE_LEAD_MS: 420,
-  FALL_FADE_DURATION_MS: 360,
-  FALL_OPACITY_DELAY_MS: 300,
-  FALL_OPACITY_DURATION_MS: 280,
+  FALL_ROW_STAGGER_MS: 15,
+  FALL_COL_STAGGER_MS: 6,
+  FALL_DURATION_MS: 280,
+  FALL_FADE_LEAD_MS: 150,
+  FALL_FADE_DURATION_MS: 150,
+  FALL_OPACITY_DELAY_MS: 120,
+  FALL_OPACITY_DURATION_MS: 120,
   FALL_DRIFT_COL_SPREAD_PX: 14,
   FALL_DRIFT_ROW_PARITY_PX: 10,
   FALL_ROW_DISTANCE_BONUS_PX: 22,
@@ -116,7 +116,7 @@ export const CLEAR_PARTICLE_CAP = 8;
 
 export const DRAG = {
   LIFT_RATIO: 1.2,
-  PLACE_VOLUME: 0.5,
+  PLACE_VOLUME: 0.85,
   MISS_VOLUME: 0.4,
   CLEAR_VOLUME: 0.8,
   /** Extra touch padding around tray piece (Block Blast–style generous grab) */

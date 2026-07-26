@@ -29,14 +29,7 @@
       "bundler": "metro"
     },
     "plugins": [
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "kotlinVersion": "1.8.0"
-          }
-        }
-      ]
+      "expo-asset"
     ],
     "extra": {
       "eas": {

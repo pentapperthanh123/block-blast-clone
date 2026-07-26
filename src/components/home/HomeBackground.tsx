@@ -43,14 +43,14 @@ type FloaterSpec = {
   amp: number;
 };
 
-const Floater: React.FC<
-  FloaterSpec & {
-    reduceMotion: boolean;
-    opacity: number;
-    skinUri: string;
-    tint: string;
-  }
-> = ({
+type FloaterProps = FloaterSpec & {
+  reduceMotion: boolean;
+  opacity: number;
+  skinUri: string;
+  tint: string;
+};
+
+const Floater = React.memo<FloaterProps>(({
   size,
   left,
   top,
@@ -70,7 +70,7 @@ const Floater: React.FC<
         duration: 2200 + delay,
         easing: Easing.inOut(Easing.sin),
       }),
-      -1,
+      999999,
       true,
     );
   }, [amp, delay, reduceMotion, ty]);
@@ -105,13 +105,13 @@ const Floater: React.FC<
       />
     </Animated.View>
   );
-};
+});
 
 export type CandyBackgroundProps = {
   density?: 'rich' | 'subtle';
 };
 
-export const CandyBackground: React.FC<CandyBackgroundProps> = ({
+export const CandyBackground = React.memo<CandyBackgroundProps>(({
   density = 'rich',
 }) => {
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -177,12 +177,12 @@ export const CandyBackground: React.FC<CandyBackgroundProps> = ({
       ))}
     </View>
   );
-};
+});
 
 /** @deprecated Prefer CandyBackground — kept for Home import compatibility */
-export const HomeBackground: React.FC = () => (
+export const HomeBackground = React.memo(() => (
   <CandyBackground density="rich" />
-);
+));
 
 const styles = StyleSheet.create({
   deep: {

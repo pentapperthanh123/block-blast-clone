@@ -35,29 +35,29 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
       expect(result1.basePoints).toBe(100);  // 1 line = 100
 
       const result2 = scoreCalculator.calculateLineClearPoints(2, 0);
-      expect(result2.basePoints).toBe(300);  // 2 lines = 3x base (not 2x!)
+      expect(result2.basePoints).toBe(400);  // 2 lines = 400
 
       const result3 = scoreCalculator.calculateLineClearPoints(3, 0);
-      expect(result3.basePoints).toBe(800);  // 3 lines = 8x base
+      expect(result3.basePoints).toBe(1200); // 3 lines = 1200
 
       const result4 = scoreCalculator.calculateLineClearPoints(4, 0);
-      expect(result4.basePoints).toBe(1500); // 4 lines = 15x base
+      expect(result4.basePoints).toBe(3000); // 4 lines = 3000
     });
   });
 
   describe('Progressive Combo Multiplier', () => {
     it('should calculate progressive combo multipliers', () => {
       expect(scoreCalculator.getComboMultiplier(0)).toBe(1.0);   // No combo
-      expect(scoreCalculator.getComboMultiplier(1)).toBe(1.2);   // 1.0 + 0.2
-      expect(scoreCalculator.getComboMultiplier(2)).toBe(1.4);   // 1.0 + 0.4
-      expect(scoreCalculator.getComboMultiplier(5)).toBe(2.0);   // 1.0 + 1.0
-      expect(scoreCalculator.getComboMultiplier(15)).toBe(4.0);  // Capped at 4.0x
+      expect(scoreCalculator.getComboMultiplier(1)).toBe(1.5);   // 1.0 + 0.5
+      expect(scoreCalculator.getComboMultiplier(2)).toBe(2.0);   // 1.0 + 1.0
+      expect(scoreCalculator.getComboMultiplier(5)).toBe(3.5);   // 1.0 + 2.5
+      expect(scoreCalculator.getComboMultiplier(20)).toBe(10.0); // Capped at 10.0x
     });
 
     it('should apply progressive combo to scoring', () => {
-      const result = scoreCalculator.calculateLineClearPoints(1, 3); // Combo 3 = 1.6x
-      expect(result.comboMultiplier).toBe(1.6);
-      expect(result.finalPoints).toBe(160); // 100 * 1.6
+      const result = scoreCalculator.calculateLineClearPoints(1, 3); // Combo 3 = 2.5x
+      expect(result.comboMultiplier).toBe(2.5);
+      expect(result.finalPoints).toBe(250); // 100 * 2.5
     });
   });
 
@@ -75,8 +75,8 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
     const singleBlock: BlockShape = { id: 'test', shape: [[1]], color: '#FF0000' };
     
     it('should handle simple single-line clear with combo', () => {
-      // 1 block (10) + 1 line with combo 2 (100 * 1.4) = 150
-      expect(scoreCalculator.calculateMovePoints(singleBlock, 1, 2)).toBe(150);
+      // 1 block (10) + 1 line with combo 2 (100 * 2.0) = 210
+      expect(scoreCalculator.calculateMovePoints(singleBlock, 1, 2)).toBe(210);
     });
 
     it('should handle explosive multi-line clear', () => {
@@ -85,8 +85,8 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
         shape: [[1, 0], [1, 0], [1, 1]],
         color: '#FF0000'
       };
-      // L-block (40) + 2 lines (300 base * 1.6x combo 3) = 40 + 480 = 520
-      expect(scoreCalculator.calculateMovePoints(lBlock, 2, 3)).toBe(520);
+      // L-block (40) + 2 lines (400 base * 2.5x combo 3) = 40 + 1000 = 1040
+      expect(scoreCalculator.calculateMovePoints(lBlock, 2, 3)).toBe(1040);
     });
 
     it('should handle massive 4-line combo clear', () => {
@@ -95,8 +95,8 @@ describe('ScoreCalculator - Enhanced Scoring System', () => {
         shape: [[1, 1, 1, 1]],
         color: '#FF0000'
       };
-      // 4-cell block (40) + 4 lines (1500 base * 2.4x combo 7) = 40 + 3600 = 3640
-      expect(scoreCalculator.calculateMovePoints(bigBlock, 4, 7)).toBe(3640);
+      // 4-cell block (40) + 4 lines (3000 base * 4.5x combo 7) = 40 + 13500 = 13540
+      expect(scoreCalculator.calculateMovePoints(bigBlock, 4, 7)).toBe(13540);
     });
   });
 

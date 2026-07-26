@@ -59,6 +59,8 @@ export const HomeScreen: React.FC = () => {
     return () => sub.remove();
   }, []);
 
+  const hasActiveSession = useGameStore((s) => s.activeSession !== null);
+
   const onClassic = () => {
     beginClassicSession();
     startClassic();
@@ -70,14 +72,14 @@ export const HomeScreen: React.FC = () => {
 
       <View style={styles.topBar}>
         <View style={styles.profileChip}>
-          <Text style={styles.chipLabel}>BEST</Text>
+          <Text style={styles.chipLabel}>KỶ LỤC</Text>
           <Text style={styles.chipValue}>{formatScore(highScore)}</Text>
         </View>
         <Pressable
           style={styles.settingsBtn}
           onPress={() => setSettingsVisible(true)}
           accessibilityRole="button"
-          accessibilityLabel="Settings"
+          accessibilityLabel="Cài đặt"
         >
           <Text style={styles.settingsIcon}>⚙️</Text>
         </Pressable>
@@ -99,10 +101,10 @@ export const HomeScreen: React.FC = () => {
       </View>
 
       <View style={styles.streakCard}>
-        <Text style={styles.streakTitle}>Consecutive Daily Victories</Text>
+        <Text style={styles.streakTitle}>Chuỗi Thắng Hàng Ngày</Text>
         <View style={styles.streakRow}>
           <View style={styles.winBadge}>
-            <Text style={styles.winBadgeText}>WIN</Text>
+            <Text style={styles.winBadgeText}>THẮNG</Text>
           </View>
           <Text style={styles.streakValue}>× {dailyStreak}</Text>
           <View style={styles.checkCircle}>
@@ -117,21 +119,21 @@ export const HomeScreen: React.FC = () => {
 
       <View style={styles.menu}>
         <MenuButton
-          label="Adventure"
+          label="Phiêu Lưu"
           color={UI_COLORS.ADVENTURE}
           icon="📍"
           onPress={() => showStub('Adventure')}
         />
         <MenuButton
-          label="Classic"
+          label={hasActiveSession ? 'Chơi Tiếp' : 'Cổ Điển'}
           color={UI_COLORS.CLASSIC}
-          icon="∞"
+          icon={hasActiveSession ? '▶' : '∞'}
           onPress={onClassic}
           emphasize
           reduceMotion={reduceMotion}
         />
         <MenuButton
-          label="More Games"
+          label="Game Khác"
           color={UI_COLORS.MORE_GAMES}
           icon="🎮"
           onPress={() => showStub('More Games')}
@@ -205,8 +207,7 @@ const MenuButton: React.FC<MenuButtonProps> = ({
         withTiming(1.025, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
         withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.sin) }),
         withTiming(1, { duration: 1200 }),
-      ),
-      -1,
+      ), 999999,
       false,
     );
   }, [emphasize, pulse, reduceMotion]);

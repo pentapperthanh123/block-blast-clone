@@ -127,13 +127,11 @@ export const GameLogo: React.FC<GameLogoProps> = ({ size = 196 }) => {
       withSequence(
         withTiming(1, { duration: 900, easing: Easing.inOut(Easing.sin) }),
         withTiming(0.55, { duration: 900, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
+      ), 999999,
       true,
     );
     ringRotate.value = withRepeat(
-      withTiming(360, { duration: 12000, easing: Easing.linear }),
-      -1,
+      withTiming(360, { duration: 12000, easing: Easing.linear }), 999999,
       false,
     );
   }, [glow, reduceMotion, ringRotate, shellOpacity, shellScale]);
@@ -218,8 +216,7 @@ const Sparkle: React.FC<{
         withSequence(
           withTiming(1, { duration: 500 }),
           withTiming(0.25, { duration: 500 }),
-        ),
-        -1,
+        ), 999999,
         true,
       ),
     );
@@ -229,8 +226,7 @@ const Sparkle: React.FC<{
         withSequence(
           withTiming(1.2, { duration: 500 }),
           withTiming(0.7, { duration: 500 }),
-        ),
-        -1,
+        ), 999999,
         true,
       ),
     );

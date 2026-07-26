@@ -92,6 +92,7 @@ describe('GameEngine', () => {
       for (let col = 0; col < 7; col++) {
         state.grid[0][col] = CellState.Filled;
       }
+      state.grid[1][0] = CellState.Filled;
 
       // Place block to complete row 0
       const block: BlockShape = {
@@ -114,10 +115,11 @@ describe('GameEngine', () => {
       let state = gameEngine.initializeGame();
       state.combo = 2; // Already have combo of 2
 
-      // Fill row 0 except last cell
+      // Fill row 0 except last cell, and fill (1,0) to prevent perfect clear
       for (let col = 0; col < 7; col++) {
         state.grid[0][col] = CellState.Filled;
       }
+      state.grid[1][0] = CellState.Filled;
 
       const block: BlockShape = {
         id: 'test',
@@ -127,8 +129,8 @@ describe('GameEngine', () => {
 
       const newState = gameEngine.placeBlock(state, block, { row: 0, col: 7 });
 
-      // Score: 10 (placement) + 140 (1 line * combo 2 = 1.4x) = 150
-      expect(newState.score).toBe(150);
+      // Score: 10 (placement) + 200 (1 line * combo 2 = 2.0x) = 210
+      expect(newState.score).toBe(210);
       // Combo should increment to 3
       expect(newState.combo).toBe(3);
     });

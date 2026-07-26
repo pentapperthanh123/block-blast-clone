@@ -48,6 +48,7 @@ describe('Type Definitions', () => {
       isGameOver: false,
       combo: 0,
       movesWithoutClear: 0,
+      perfectClears: 0,
     };
     
     expect(gameState.score).toBe(100);

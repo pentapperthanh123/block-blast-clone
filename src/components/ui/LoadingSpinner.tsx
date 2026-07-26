@@ -59,8 +59,7 @@ const BouncingBlock: React.FC<BouncingBlockProps> = ({ delay, size, gap, index }
             duration: 450,
             easing: Easing.in(Easing.quad),
           })
-        ),
-        -1,
+        ), 999999,
         false
       )
     );
@@ -78,8 +77,7 @@ const BouncingBlock: React.FC<BouncingBlockProps> = ({ delay, size, gap, index }
             duration: 450,
             easing: Easing.in(Easing.cubic),
           })
-        ),
-        -1,
+        ), 999999,
         false
       )
     );
@@ -91,8 +89,7 @@ const BouncingBlock: React.FC<BouncingBlockProps> = ({ delay, size, gap, index }
         withSequence(
           withTiming(8, { duration: 450 }),
           withTiming(-8, { duration: 450 })
-        ),
-        -1,
+        ), 999999,
         true
       )
     );
