@@ -75,7 +75,7 @@ coverage/
 .idea/
 
 # Project-specific agent configuration
-.agents/
+# .agents/
 
 # Understand Anything knowledge graph
 # .understand-anything/
