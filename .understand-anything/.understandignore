@@ -1,0 +1,59 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+# --- From .gitignore (uncomment to exclude) ---
+
+# .DS_Store
+# *.pbxuser
+# !default.pbxuser
+# *.mode1v3
+# !default.mode1v3
+# *.mode2v3
+# !default.mode2v3
+# *.perspectivev3
+# !default.perspectivev3
+# xcuserdata
+# *.xccheckout
+# *.moved-aside
+# DerivedData
+# *.hmap
+# *.ipa
+# *.xcuserstate
+# ios/.xcode.env.local
+# .gradle
+# local.properties
+# *.iml
+# *.hprof
+# .cxx/
+# *.keystore
+# !debug.keystore
+# npm-debug.log
+# yarn-error.log
+# *.jsbundle
+# ios/Pods/
+# .expo/
+# .metro-health-check*
+# *.swp
+# *.swo
+# *~
+# .tmp/
+# .env
+# .env.local
+# .env.development.local
+# .env.test.local
+# .env.production.local
+# *.tsbuildinfo
+# .agents/
+# android/app/build/
+# ios/build/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap

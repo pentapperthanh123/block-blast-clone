@@ -78,7 +78,7 @@ coverage/
 .agents/
 
 # Understand Anything knowledge graph
-.understand-anything/
+# .understand-anything/
 
 # Build artifacts
 android/app/build/
