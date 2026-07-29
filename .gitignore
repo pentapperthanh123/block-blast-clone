@@ -74,11 +74,11 @@ coverage/
 .vscode/
 .idea/
 
-# # Project-specific agent configuration
-# .agents/
+# Project-specific agent configuration
+.agents/
 
-# # Understand Anything knowledge graph
-# .understand-anything/
+# Understand Anything knowledge graph
+.understand-anything/
 
 # Build artifacts
 android/app/build/
