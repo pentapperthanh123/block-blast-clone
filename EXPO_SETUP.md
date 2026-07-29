@@ -1,4 +1,4 @@
-# Expo Setup Guide - Block Blast Clone
+# Expo Setup Guide - Block Blast
 
 ## 🚀 Quick Start
 

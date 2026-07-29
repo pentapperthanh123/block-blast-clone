@@ -29,6 +29,7 @@ export const CuteMascot = React.memo<CuteMascotProps>(({ visible, emotion }) => 
     </>
   );
 });
+CuteMascot.displayName = 'CuteMascot';
 
 interface MascotSideProps {
   visible: boolean;
@@ -198,10 +199,11 @@ const MascotSide = React.memo<MascotSideProps>(({ visible, emotion, side }) => {
     </Animated.View>
   );
 });
+MascotSide.displayName = 'MascotSide';
 
 const MascotSVG = React.memo<{ emotion: 'calm' | 'happy' | 'excited' | 'shocked'; color: string, side: 'left' | 'right' }>(({ 
   emotion, 
-  color,
+  color: _color,
   side
 }) => {
   if (side === 'left') {
@@ -354,6 +356,7 @@ const MascotSVG = React.memo<{ emotion: 'calm' | 'happy' | 'excited' | 'shocked'
     );
   }
 });
+MascotSVG.displayName = 'MascotSVG';
 
 const styles = StyleSheet.create({
   container: {

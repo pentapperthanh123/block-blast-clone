@@ -80,6 +80,7 @@ export const NewRoundTransition = React.memo(() => {
     </Animated.View>
   );
 });
+NewRoundTransition.displayName = 'NewRoundTransition';
 
 const styles = StyleSheet.create({
   overlay: {

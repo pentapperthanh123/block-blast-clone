@@ -19,15 +19,49 @@ import { SettingsModal } from './SettingsModal';
 
 const COUNTER_MS = 650;
 
+const THEME_EMOJIS: Record<string, string> = {
+  watermelon: '🍉',
+  milktea: '🧋',
+  love: '💖',
+  jollibee: '🍗',
+  coffee: '☕',
+  matcha: '🍵',
+  beer: '🍺',
+  ocean: '🌊',
+  sunset: '🌅',
+};
+
 export const GameHeader = React.memo(() => {
   const score = useGameStore((s) => s.score);
   const highScore = useGameStore((s) => s.highScore);
+  const currentTheme = useGameStore((s) => s.currentTheme);
+  const feedbackNonce = useGameStore((s) => s.feedbackNonce);
   const goHome = useAppStore((s) => s.goHome);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [displayScore, setDisplayScore] = useState(score);
   const displayRef = useRef(score);
   const rafRef = useRef<number | null>(null);
   const scale = useSharedValue(1);
+
+  // Animated values for score background theme icon effect
+  const bgOpacity = useSharedValue(0);
+  const bgScale = useSharedValue(0.4);
+
+  useEffect(() => {
+    if (feedbackNonce > 0) {
+      bgOpacity.value = 0;
+      bgScale.value = 0.4;
+
+      bgOpacity.value = withSequence(
+        withTiming(0.85, { duration: 150 }),
+        withTiming(0, { duration: 650 }),
+      );
+      bgScale.value = withSequence(
+        withSpring(1.4, { damping: 8, stiffness: 140 }),
+        withTiming(1.8, { duration: 650 }),
+      );
+    }
+  }, [feedbackNonce, bgOpacity, bgScale]);
 
   useEffect(() => {
     const from = displayRef.current;
@@ -87,6 +121,13 @@ export const GameHeader = React.memo(() => {
     transform: [{ scale: scale.value }],
   }));
 
+  const bgAnimStyle = useAnimatedStyle(() => ({
+    opacity: bgOpacity.value,
+    transform: [{ scale: bgScale.value }],
+  }));
+
+  const emoji = THEME_EMOJIS[currentTheme] ?? '⭐';
+
   return (
     <>
       <View style={styles.root}>
@@ -112,13 +153,21 @@ export const GameHeader = React.memo(() => {
             <Text style={styles.settingsIcon}>⚙</Text>
           </Pressable>
         </View>
-        <Animated.Text
-          style={[styles.score, scoreAnimStyle]}
-          testID="score-counter"
-          accessibilityLabel={`score-${displayScore}`}
-        >
-          {formatScore(displayScore)}
-        </Animated.Text>
+
+        {/* Score Container with Animated Background Theme Emoji Burst */}
+        <View style={styles.scoreWrapper}>
+          <Animated.View style={[styles.bgEffect, bgAnimStyle]}>
+            <Text style={styles.bgEmoji}>{emoji}</Text>
+          </Animated.View>
+
+          <Animated.Text
+            style={[styles.score, scoreAnimStyle]}
+            testID="score-counter"
+            accessibilityLabel={`score-${displayScore}`}
+          >
+            {formatScore(displayScore)}
+          </Animated.Text>
+        </View>
       </View>
 
       <SettingsModal
@@ -160,6 +209,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 16,
     letterSpacing: 0.5,
+    fontFamily: 'Fredoka',
   },
   homeBtn: {
     width: 44,
@@ -188,14 +238,32 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#D1E2FF',
   },
-  score: {
+  scoreWrapper: {
     marginTop: 8,
-    fontSize: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  bgEffect: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: -1,
+  },
+  bgEmoji: {
+    fontSize: 72,
+    opacity: 0.9,
+  },
+  score: {
+    fontSize: 58,
     fontWeight: '900',
     color: UI_COLORS.TEXT_PRIMARY,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
+    fontFamily: 'Fredoka',
     textShadowColor: 'rgba(0,0,0,0.45)',
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 8,
   },
 });
+
+GameHeader.displayName = 'GameHeader';

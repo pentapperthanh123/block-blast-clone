@@ -28,11 +28,13 @@ import { THEMES } from '../constants/themes';
 import { HomeBackground, HomeHeroArt } from '../components/home';
 import { SettingsModal } from '../components/ui/SettingsModal';
 import { formatScore } from '../utils/formatScore';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 const TITLE_COLORS = TITLE_LETTER_COLORS;
 
 function showStub(label: string) {
-  const message = `${label} coming soon — play Classic for now.`;
+  const message = `${label} ${i18n.t('home.coming_soon')}`;
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     window.alert(message);
     return;
@@ -41,6 +43,7 @@ function showStub(label: string) {
 }
 
 export const HomeScreen: React.FC = () => {
+  const { t } = useTranslation();
   const startClassic = useAppStore((s) => s.startClassic);
   const dailyStreak = useAppStore((s) => s.dailyStreak);
   const highScore = useGameStore((s) => s.highScore);
@@ -72,14 +75,14 @@ export const HomeScreen: React.FC = () => {
 
       <View style={styles.topBar}>
         <View style={styles.profileChip}>
-          <Text style={styles.chipLabel}>KỶ LỤC</Text>
+          <Text style={styles.chipLabel}>{t('common.high_score')}</Text>
           <Text style={styles.chipValue}>{formatScore(highScore)}</Text>
         </View>
         <Pressable
           style={styles.settingsBtn}
           onPress={() => setSettingsVisible(true)}
           accessibilityRole="button"
-          accessibilityLabel="Cài đặt"
+          accessibilityLabel={t('common.settings')}
         >
           <Text style={styles.settingsIcon}>⚙️</Text>
         </Pressable>
@@ -101,10 +104,10 @@ export const HomeScreen: React.FC = () => {
       </View>
 
       <View style={styles.streakCard}>
-        <Text style={styles.streakTitle}>Chuỗi Thắng Hàng Ngày</Text>
+        <Text style={styles.streakTitle}>{t('home.daily_streak')}</Text>
         <View style={styles.streakRow}>
           <View style={styles.winBadge}>
-            <Text style={styles.winBadgeText}>THẮNG</Text>
+            <Text style={styles.winBadgeText}>{t('home.win')}</Text>
           </View>
           <Text style={styles.streakValue}>× {dailyStreak}</Text>
           <View style={styles.checkCircle}>
@@ -119,13 +122,13 @@ export const HomeScreen: React.FC = () => {
 
       <View style={styles.menu}>
         <MenuButton
-          label="Phiêu Lưu"
+          label={t('home.adventure')}
           color={UI_COLORS.ADVENTURE}
           icon="📍"
           onPress={() => showStub('Adventure')}
         />
         <MenuButton
-          label={hasActiveSession ? 'Chơi Tiếp' : 'Cổ Điển'}
+          label={hasActiveSession ? t('home.resume') : t('home.classic')}
           color={UI_COLORS.CLASSIC}
           icon={hasActiveSession ? '▶' : '∞'}
           onPress={onClassic}
@@ -133,7 +136,7 @@ export const HomeScreen: React.FC = () => {
           reduceMotion={reduceMotion}
         />
         <MenuButton
-          label="Game Khác"
+          label={t('home.more_games')}
           color={UI_COLORS.MORE_GAMES}
           icon="🎮"
           onPress={() => showStub('More Games')}

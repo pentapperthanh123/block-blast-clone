@@ -98,6 +98,7 @@ export const BlockTray = React.memo<BlockTrayProps>(({ boardLayout }) => {
     </Animated.View>
   );
 });
+BlockTray.displayName = 'BlockTray';
 
 const styles = StyleSheet.create({
   tray: {

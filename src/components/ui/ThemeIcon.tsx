@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, StyleSheet, ViewStyle, Image } from 'react-native';
-import Svg, { Rect, Ellipse, Path, Circle, Defs, LinearGradient, Stop, G, Polygon } from 'react-native-svg';
+import Svg, { Rect, Ellipse, Path, Circle, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import {
   THEME_BLOCK_IMAGES,
   isThemeImageSource,
@@ -45,7 +45,6 @@ export const ThemeIcon: React.FC<ThemeIconProps> = React.memo(
 
     const isWatermelon = source.includes('melonPink');
     const isMilktea = source.includes('milkTeaGrad');
-    const isGem = source.includes('gemGrad');
     const isLove = source.includes('loveRose');
     const isOcean = source.includes('oceanWater');
     const isSunset = source.includes('sunsetSky');
@@ -59,7 +58,6 @@ export const ThemeIcon: React.FC<ThemeIconProps> = React.memo(
         <Svg width={size} height={size} viewBox="0 0 130 130">
           {isWatermelon && <WatermelonSVG />}
           {isMilktea && <MilkteaSVG />}
-          {isGem && <GemSVG />}
           {isLove && <LoveSVG />}
           {isOcean && <OceanSVG />}
           {isSunset && <SunsetSVG />}
@@ -76,6 +74,7 @@ export const ThemeIcon: React.FC<ThemeIconProps> = React.memo(
     prev.size === next.size &&
     prev.style === next.style,
 );
+ThemeIcon.displayName = 'ThemeIcon';
 
 // Individual theme SVG components
 const WatermelonSVG = () => (
@@ -120,22 +119,6 @@ const MilkteaSVG = () => (
     <Rect x="76.5" y="18" width="2.5" height="35" fill="#ffffff" opacity="0.7" />
     {/* Highlight */}
     <Path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="#ffffff" opacity="0.35" />
-  </>
-);
-
-const GemSVG = () => (
-  <>
-    <Defs>
-      <LinearGradient id="gemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor="#A78BFA" />
-        <Stop offset="100%" stopColor="#7C3AED" />
-      </LinearGradient>
-    </Defs>
-    <Rect width="130" height="130" rx="20" fill="#4C1D95" />
-    <Polygon points="65,13 130,45.5 130,110.5 65,143 0,110.5 0,45.5" fill="url(#gemGrad)" />
-    <Polygon points="65,32.5 110.5,58.5 65,91 19.5,58.5" fill="rgba(255,255,255,0.5)" />
-    <Path d="M 65 32.5 L 65 91" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
-    <Path d="M 19.5 58.5 L 110.5 58.5" stroke="rgba(255,255,255,0.25)" strokeWidth="3" />
   </>
 );
 

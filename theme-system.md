@@ -2,7 +2,7 @@
 
 ## 📋 Tổng Quan
 
-Hệ thống multi-theme cho Block Blast clone với 5 themes độc đáo, mỗi theme có:
+Hệ thống multi-theme cho Block Blast với 5 themes độc đáo, mỗi theme có:
 - Palette màu riêng biệt (background, glows, board)
 - SVG patterns đặc trưng cho blocks
 - Visual identity hoàn chỉnh

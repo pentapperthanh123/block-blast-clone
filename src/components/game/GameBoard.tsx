@@ -12,7 +12,6 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
-  withSpring,
 } from 'react-native-reanimated';
 import { useGameStore } from '../../store/gameStore';
 import { GRID_SIZE, BLOCK_COLORS, BOARD_CONSTANTS, ANIMATION, getMaxBoardFallMs } from '../../constants';
@@ -317,6 +316,7 @@ const BoardRow: React.FC<BoardRowProps> = React.memo(({
     </View>
   );
 }, boardRowPropsEqual);
+BoardRow.displayName = 'BoardRow';
 
 /** Subtle checker tint + grid lines behind blocks */
 const BoardGridOverlay: React.FC<{
@@ -377,6 +377,7 @@ const BoardGridOverlay: React.FC<{
     </View>
   );
 });
+BoardGridOverlay.displayName = 'BoardGridOverlay';
 
 const FallingGridWrapper: React.FC<{
   isFalling: boolean;
@@ -681,6 +682,7 @@ const BoardCell: React.FC<BoardCellProps> = React.memo(({
     </Animated.View>
   );
 }, boardCellEqual);
+BoardCell.displayName = 'BoardCell';
 
 export function pointerToCell(
   pageX: number,

@@ -2,7 +2,7 @@
 
 ## 🎯 Objective
 
-Implement core game engine for Block Blast clone following Clean Architecture principles.
+Implement core game engine for Block Blast following Clean Architecture principles.
 
 ---
 

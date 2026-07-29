@@ -1,0 +1,72 @@
+[
+  {
+    "id": "toeic_001",
+    "question": "The company _______ its quarterly sales targets thanks to the new marketing campaign.",
+    "options": ["exceeded", "exceeds", "exceeding", "exceed"],
+    "correctAnswer": 0,
+    "explanation": "Chúng ta cần động từ chính ở thì quá khứ đơn 'exceeded' vì mục tiêu doanh số quý đã được hoàn thành (thanks to the new campaign)."
+  },
+  {
+    "id": "toeic_002",
+    "question": "Please submit your travel expense reports to the finance department by _______ Friday.",
+    "options": ["late", "later", "latest", "no later than"],
+    "correctAnswer": 3,
+    "explanation": "'no later than + thời gian' nghĩa là 'không muộn hơn/trước...', phù hợp để chỉ hạn chót nộp báo cáo."
+  },
+  {
+    "id": "toeic_003",
+    "question": "Mr. Gomez is _______ for overseeing the merger of the two technology firms.",
+    "options": ["response", "responsible", "responsibly", "responsibility"],
+    "correctAnswer": 1,
+    "explanation": "Cấu trúc 'be responsible for doing something' nghĩa là chịu trách nhiệm cho việc gì."
+  },
+  {
+    "id": "toeic_004",
+    "question": "All visitors must _______ at the front desk and obtain a security badge before entering the facility.",
+    "options": ["sign in", "sign up", "sign off", "sign out"],
+    "correctAnswer": 0,
+    "explanation": "'sign in' nghĩa là đăng ký vào (khi đến thăm), 'sign up' là đăng ký tham gia, 'sign out' là đăng xuất hoặc ký tên khi về."
+  },
+  {
+    "id": "toeic_005",
+    "question": "The seminar was delayed _______ the keynote speaker's flight was grounded due to bad weather.",
+    "options": ["because", "because of", "although", "despite"],
+    "correctAnswer": 0,
+    "explanation": "Sau chỗ trống là một mệnh đề (subject + verb), vì vậy ta chọn liên từ 'because'. 'because of' đi với danh từ/V-ing."
+  },
+  {
+    "id": "toeic_006",
+    "question": "The new software update makes it _______ for employees to collaborate on projects remotely.",
+    "options": ["easy", "easily", "easier", "easiness"],
+    "correctAnswer": 2,
+    "explanation": "Cấu trúc: make + it + adj + for someone to do something. So sánh hơn 'easier' phù hợp để chỉ sự cải tiến so với trước."
+  },
+  {
+    "id": "toeic_007",
+    "question": "Ms. Patterson was promoted to marketing director due to her _______ performance.",
+    "options": ["exception", "exceptional", "exceptionally", "excepts"],
+    "correctAnswer": 1,
+    "explanation": "Trước danh từ 'performance' cần một tính từ bổ nghĩa. 'exceptional' nghĩa là xuất sắc, nổi bật."
+  },
+  {
+    "id": "toeic_008",
+    "question": "The contract negotiations were handled _______ by the legal team.",
+    "options": ["skillful", "skillfully", "skillfulness", "skills"],
+    "correctAnswer": 1,
+    "explanation": "Cần một trạng từ 'skillfully' bổ nghĩa cho động từ/phân từ 'handled' (được xử lý một cách tài tình)."
+  },
+  {
+    "id": "toeic_009",
+    "question": "The marketing budget has been increased _______ 15% for the next fiscal year.",
+    "options": ["by", "at", "to", "for"],
+    "correctAnswer": 0,
+    "explanation": "'increase by + %' dùng để chỉ lượng thay đổi tăng thêm bao nhiêu phần trăm."
+  },
+  {
+    "id": "toeic_010",
+    "question": "Employees are encouraged to attend the workshop, but attendance is _______.",
+    "options": ["option", "optional", "optionally", "options"],
+    "correctAnswer": 1,
+    "explanation": "Sau động từ tobe 'is' cần một tính từ làm vị ngữ. 'optional' nghĩa là tự nguyện/không bắt buộc."
+  }
+]

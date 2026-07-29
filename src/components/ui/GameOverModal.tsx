@@ -21,13 +21,16 @@ import { useAppStore } from '../../store/appStore';
 import { UI_COLORS } from '../../constants';
 import { formatScore } from '../../utils/formatScore';
 import { playGlobalSound, GAME_OVER_SOUND, stopWarningSound } from '../../constants/themeSounds';
+import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export const GameOverModal = React.memo(() => {
+  const { t } = useTranslation();
   const score = useGameStore((s) => s.score);
   const highScore = useGameStore((s) => s.highScore);
   const beginNewRound = useGameStore((s) => s.beginNewRound);
+  const setQuizActive = useGameStore((s) => s.setQuizActive);
   const goHome = useAppStore((s) => s.goHome);
   const isNewHighScore = score === highScore && score > 0;
 
@@ -75,32 +78,37 @@ export const GameOverModal = React.memo(() => {
   return (
     <View style={styles.overlay}>
       <Animated.View style={[styles.modal, modalStyle]}>
-        <Text style={styles.title}>Thua Cuộc!</Text>
+        <Text style={styles.title}>{t('common.game_over')}</Text>
 
         {isNewHighScore && (
-          <Text style={styles.newHighScore}>Kỷ Lục Mới!</Text>
+          <Text style={styles.newHighScore}>{t('common.new_record')}</Text>
         )}
 
         <View style={styles.scoreContainer}>
-          <Text style={styles.label}>Điểm Của Bạn</Text>
+          <Text style={styles.label}>{t('common.your_score')}</Text>
           <Text style={styles.score}>{formatScore(displayScore)}</Text>
-          <Text style={[styles.label, styles.bestLabel]}>Điểm Cao Nhất</Text>
+          <Text style={[styles.label, styles.bestLabel]}>{t('common.best_score')}</Text>
           <Text style={styles.bestScore}>{formatScore(highScore)}</Text>
         </View>
 
+        <Pressable style={[styles.button, styles.reviveButton]} onPress={() => setQuizActive(true)}>
+          <Text style={[styles.buttonText, styles.reviveButtonText]}>{t('quiz.revive')}</Text>
+        </Pressable>
+
         <Pressable style={styles.button} onPress={beginNewRound}>
-          <Text style={styles.buttonText}>Chơi Lại</Text>
+          <Text style={styles.buttonText}>{t('common.play_again')}</Text>
         </Pressable>
         <Pressable
           style={[styles.button, styles.secondary]}
           onPress={goHome}
         >
-          <Text style={[styles.buttonText, styles.secondaryText]}>Trang Chủ</Text>
+          <Text style={[styles.buttonText, styles.secondaryText]}>{t('common.home')}</Text>
         </Pressable>
       </Animated.View>
     </View>
   );
 });
+GameOverModal.displayName = 'GameOverModal';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -200,6 +208,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.28)',
+  },
+  reviveButton: {
+    backgroundColor: '#EAB308',
+    borderTopColor: 'rgba(255,255,255,0.6)',
+    borderLeftColor: 'rgba(255,255,255,0.4)',
+    borderBottomColor: 'rgba(0,0,0,0.35)',
+    borderRightColor: 'rgba(0,0,0,0.25)',
+  },
+  reviveButtonText: {
+    color: '#0F172A',
   },
   buttonText: {
     fontSize: 18,

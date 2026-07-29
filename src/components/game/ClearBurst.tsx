@@ -85,9 +85,9 @@ export const ClearBurst = React.memo(() => {
           delay: (i % 4) * 20,
           color: colors[i % colors.length],
           shape: fx.shape,
-          size: fx.size + (i % 3) * 2,
-          burstX: Math.cos(angle) * (dist * 0.5),
-          burstY: Math.sin(angle) * dist,
+          size: fx.size + (i % 3) * 2.5,
+          burstX: Math.cos(angle) * dist * 1.2,
+          burstY: Math.sin(angle) * dist * 1.2,
         });
       }
     });
@@ -107,9 +107,9 @@ export const ClearBurst = React.memo(() => {
           delay: (i % 4) * 20,
           color: colors[(i + 2) % colors.length],
           shape: fx.shape,
-          size: fx.size + (i % 3) * 2,
-          burstX: Math.sin(angle) * dist,
-          burstY: Math.cos(angle) * (dist * 0.5),
+          size: fx.size + (i % 3) * 2.5,
+          burstX: Math.sin(angle) * dist * 1.2,
+          burstY: Math.cos(angle) * dist * 1.2,
         });
       }
     });
@@ -119,18 +119,32 @@ export const ClearBurst = React.memo(() => {
       clearingColumns.forEach((c) => {
         const cx = c * cellStep + cellStep / 2;
         const cy = r * cellStep + cellStep / 2;
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2;
+        // Add a giant flash at intersection
+        pList.push({
+          id: `p-flash-${r}-${c}`,
+          left: cx,
+          top: cy,
+          delay: 0,
+          color: '#FFFFFF',
+          shape: 'star',
+          size: cellStep * 1.5,
+          burstX: 0,
+          burstY: 0,
+        });
+
+        // 8 directional starburst instead of 6
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
           pList.push({
             id: `p-x-${r}-${c}-${i}`,
             left: cx,
             top: cy,
             delay: 0,
-            color: '#FFFFFF',
-            shape: 'diamond',
-            size: fx.size + 4,
-            burstX: Math.cos(angle) * 32,
-            burstY: Math.sin(angle) * 32,
+            color: fx.colors[i % fx.colors.length], // use theme colors
+            shape: fx.shape,
+            size: fx.size + 4 + Math.random() * 4,
+            burstX: Math.cos(angle) * (35 + Math.random() * 20),
+            burstY: Math.sin(angle) * (35 + Math.random() * 20),
           });
         }
       });
@@ -158,6 +172,7 @@ export const ClearBurst = React.memo(() => {
     </View>
   );
 });
+ClearBurst.displayName = 'ClearBurst';
 
 /** Expanding glowing laser line across cleared row/col */
 const LineBeam = React.memo<{
@@ -171,8 +186,8 @@ const LineBeam = React.memo<{
   const scale = useSharedValue(0.4);
 
   useEffect(() => {
-    opacity.value = withTiming(0, { duration: 320, easing: Easing.out(Easing.quad) });
-    scale.value = withTiming(1.3, { duration: 300, easing: Easing.out(Easing.cubic) });
+    opacity.value = withTiming(0, { duration: 450, easing: Easing.out(Easing.quad) });
+    scale.value = withTiming(2.5, { duration: 380, easing: Easing.out(Easing.back(1.5)) });
   }, [opacity, scale]);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -203,6 +218,7 @@ const LineBeam = React.memo<{
     </Animated.View>
   );
 });
+LineBeam.displayName = 'LineBeam';
 
 const Spark = React.memo<ParticleData>(
   ({ left, top, delay, color, shape, size, burstX, burstY }) => {
@@ -236,8 +252,8 @@ const Spark = React.memo<ParticleData>(
         delay,
         withTiming(45 + (delay % 4) * 30, { duration: 340 }),
       );
-      opacity.value = withDelay(delay + 160, withTiming(0, { duration: 180 }));
-      scale.value = withDelay(delay + 180, withTiming(0.2, { duration: 160 }));
+      opacity.value = withDelay(delay + 220, withTiming(0, { duration: 240 }));
+      scale.value = withDelay(delay + 200, withTiming(0.2, { duration: 200 }));
     }, [delay, opacity, scale, tx, ty, rotate, burstX, burstY]);
 
     const style = useAnimatedStyle(() => ({
@@ -286,6 +302,7 @@ const Spark = React.memo<ParticleData>(
     );
   },
 );
+Spark.displayName = 'Spark';
 
 const ChickenDrumstick: React.FC<{ size: number; color: string }> = ({
   size,

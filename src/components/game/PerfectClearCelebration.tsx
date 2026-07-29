@@ -11,10 +11,9 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 import { useGameStore } from '../../store/gameStore';
-import { THEMES, resolveTheme } from '../../constants/themes';
 import { formatScore } from '../../utils/formatScore';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const Mascot = ({ isLeft, delay = 0 }: { isLeft: boolean; delay?: number }) => {
   const scale = useSharedValue(0);
@@ -154,6 +153,7 @@ export const PerfectClearCelebration = React.memo(() => {
     </View>
   );
 });
+PerfectClearCelebration.displayName = 'PerfectClearCelebration';
 
 const styles = StyleSheet.create({
   container: {

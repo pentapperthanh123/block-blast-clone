@@ -5,6 +5,8 @@
 
 import { BlockShape } from '../types';
 
+import { formatScore } from '../utils/formatScore';
+
 export type FeedbackTier = 'Good' | 'Perfect' | 'Awesome' | 'Unbelievable';
 
 /** reset = miss breaks combo; persist = keep stacking until game over */
@@ -16,8 +18,6 @@ export interface ScoreBreakdown {
   finalPoints: number;
   feedbackTier: FeedbackTier;
 }
-
-import { formatScore } from '../utils/formatScore';
 
 export class ScoreCalculator {
   private readonly CELL_PLACEMENT_POINTS = 10;

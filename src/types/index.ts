@@ -44,6 +44,8 @@ export interface GameState {
   movesWithoutClear: number;
   /** Number of times the entire board was cleared in the current round */
   perfectClears: number;
+  /** Number of times revived in the current game session */
+  reviveCount: number;
 }
 
 /** Parallel color map for filled cells (null = empty) */

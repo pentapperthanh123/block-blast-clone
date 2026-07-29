@@ -112,7 +112,7 @@ describe('GameEngine', () => {
     });
 
     it('should apply combo multiplier', () => {
-      let state = gameEngine.initializeGame();
+      const state = gameEngine.initializeGame();
       state.combo = 2; // Already have combo of 2
 
       // Fill row 0 except last cell, and fill (1,0) to prevent perfect clear
@@ -136,7 +136,7 @@ describe('GameEngine', () => {
     });
 
     it('should reset combo when no lines cleared', () => {
-      let state = gameEngine.initializeGame();
+      const state = gameEngine.initializeGame();
       state.combo = 5; // High combo
 
       const block: BlockShape = {
@@ -192,7 +192,7 @@ describe('GameEngine', () => {
     });
 
     it('should update high score', () => {
-      let state = gameEngine.initializeGame();
+      const state = gameEngine.initializeGame();
       state.highScore = 50;
 
       // Place a 4-cell block (40 points)
@@ -212,7 +212,7 @@ describe('GameEngine', () => {
 
       // Add more points to beat high score
       // Fill row 2 except last cell
-      let state2 = { ...newState };
+      const state2 = { ...newState };
       for (let col = 0; col < 7; col++) {
         state2.grid[2][col] = CellState.Filled;
       }

@@ -26,6 +26,8 @@ import { Platform } from 'react-native';
 import { applyBlockColors, clearColorLines, createEmptyColorGrid } from '../utils/colorGrid';
 import { createRoundStartBoard } from '../utils/randomGrid';
 import { syncSharedGrid } from '../utils/sharedGrid';
+import { Question } from '../utils/spacedRepetition';
+import { generateOpenRouterQuestion } from '../utils/openrouter';
 import { ANIMATION, DRAG, getMaxBoardFallMs } from '../constants';
 import {
   BlockGenSettings,
@@ -60,6 +62,7 @@ export interface ActiveSessionSnapshot {
   combo: number;
   currentTheme: ThemeName;
   boardEpoch: number;
+  reviveCount: number;
 }
 
 export interface DragOverlayState {
@@ -144,6 +147,13 @@ interface GameStore extends GameState {
   loadBlockGenSettings: () => Promise<void>;
   setGameplaySettings: (settings: GameplaySettings) => void;
   loadGameplaySettings: () => Promise<void>;
+  quizActive: boolean;
+  setQuizActive: (active: boolean) => void;
+  reviveGame: () => void;
+  cachedQuizQuestion: Question | null;
+  usedQuizHistory: string[];
+  preFetchQuizQuestion: () => Promise<void>;
+  registerUsedQuestion: (questionText: string) => void;
 }
 
 const HIGH_SCORE_KEY = '@block-blast:high-score';
@@ -166,8 +176,7 @@ let pendingColors: ColorGrid | null = null;
 let pendingThemeCycle = false;
 /** Cancels stale deferred danger / warning callbacks after newer moves or game over */
 let dangerFeedbackSeq = 0;
-
-const EMPTY_ARRAY: any[] = [];
+const EMPTY_ARRAY: unknown[] = [];
 
 function invalidateDangerFeedback() {
   dangerFeedbackSeq += 1;
@@ -381,23 +390,6 @@ function noteHighScoreIfNeeded(
   void playGlobalSound(NEW_RECORD_SOUND, 0.78);
 }
 
-function triggerMood(set: (partial: Partial<GameStore>) => void, get: () => GameStore) {
-  if (moodTimer) clearTimeout(moodTimer);
-  if (feedbackTimer) clearTimeout(feedbackTimer);
-  set({
-    moodVisible: true,
-    feedbackVisible: true,
-    feedbackNonce: get().feedbackNonce + 1,
-    lastMoodIndex: get().lastMoodIndex + 1,
-  });
-  moodTimer = setTimeout(() => {
-    get().hideMood();
-  }, ANIMATION.SCORE_POPUP);
-  feedbackTimer = setTimeout(() => {
-    set({ feedbackVisible: false });
-  }, ANIMATION.SCORE_POPUP);
-}
-
 export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
   ...gameEngine.initializeGame(),
   cellColors: createEmptyColorGrid(),
@@ -414,7 +406,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
   feedbackVisible: false,
   feedbackNonce: 0,
   lastScoreBreakdown: null,
-  currentTheme: 'ocean',
+  currentTheme: 'classic',
   comboMode: 'persist',
   blockGenSettings: { ...DEFAULT_BLOCK_GEN_SETTINGS },
   gameplaySettings: { ...DEFAULT_GAMEPLAY_SETTINGS },
@@ -428,6 +420,9 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
   savedMoment: false,
 
   activeSession: null,
+  quizActive: false,
+  cachedQuizQuestion: null,
+  usedQuizHistory: [],
   initGame: () => {
     if (clearTimer) {
       clearTimeout(clearTimer);
@@ -495,6 +490,8 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
     if (get().gameplaySettings.randomThemeOnNewRound) {
       get().cycleRandomTheme();
     }
+    void get().preFetchQuizQuestion();
+    get().confirmGameOverIfDeadlocked();
   },
 
   persistGameOverIfNeeded: () => {
@@ -555,6 +552,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
         combo: activeSession.combo ?? 0,
         currentTheme: activeSession.currentTheme,
         boardEpoch: activeSession.boardEpoch ?? 0,
+        reviveCount: activeSession.reviveCount ?? 0,
         isGameOver: false,
         newRoundPhase: 'idle',
         ghost: null,
@@ -568,6 +566,8 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
         feedbackVisible: false,
       });
       invalidateDangerFeedback();
+      void get().preFetchQuizQuestion();
+      get().confirmGameOverIfDeadlocked();
       return;
     }
     get().initGame();
@@ -841,7 +841,6 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       } catch (err) {
         console.error('Error during block placement:', err);
         set({ dragOverlay: null, ghost: null });
-        let isSuccess = false;
       } finally {
         if (onPlaced) onPlaced(!get().isGameOver); // Roughly determine success
       }
@@ -1074,6 +1073,7 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       combo: state.combo,
       currentTheme: state.currentTheme,
       boardEpoch: state.boardEpoch,
+      reviveCount: state.reviveCount,
     };
     set({ activeSession: snapshot });
     void AsyncStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(snapshot)).catch((err) =>
@@ -1098,6 +1098,95 @@ export const useGameStore = createWithEqualityFn<GameStore>((set, get) => ({
       }
     } catch (error) {
       console.error('Failed to load active session:', error);
+    }
+  },
+
+  setQuizActive: (active) => set({ quizActive: active }),
+
+  reviveGame: () => {
+    const state = get();
+    // Copy the current board grid
+    const currentGrid = state.grid.map(row => [...row]);
+    const currentColorGrid = state.cellColors.map(row => [...row]);
+
+    // Find row densities of filled cells
+    const rowStats = currentGrid.map((row, idx) => {
+      const filledCount = row.filter(cell => cell === 1).length;
+      return { idx, filledCount };
+    });
+
+    // Sort by filled count descending
+    rowStats.sort((a, b) => b.filledCount - a.filledCount);
+
+    // Clear top 3 rows (only if they have at least 1 block)
+    const rowsToClear = rowStats
+      .filter(stat => stat.filledCount > 0)
+      .slice(0, 3)
+      .map(stat => stat.idx);
+
+    rowsToClear.forEach(rIdx => {
+      currentGrid[rIdx] = currentGrid[rIdx].map(() => 0);
+      currentColorGrid[rIdx] = currentColorGrid[rIdx].map(() => null);
+    });
+
+    // Create 3 easy blocks
+    const easyShapes = [
+      [[1]], // 1x1
+      [[1, 1]], // 2x1
+      [[1], [1]] // 1x2
+    ];
+
+    const colors = ['cyan', 'orange', 'green'];
+    const easyPieces = easyShapes.map((shape, index) => {
+      const colorKey = colors[index % colors.length];
+      const paintColor = getThemePaintColor(resolveTheme(state.currentTheme), colorKey);
+      return {
+        id: `block-easy-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}`,
+        shape: shape.map(row => [...row]),
+        color: paintColor
+      };
+    });
+
+    const nextUsedHistory = [...state.usedQuizHistory];
+    if (state.cachedQuizQuestion) {
+      nextUsedHistory.push(state.cachedQuizQuestion.question);
+    }
+
+    set({
+      isGameOver: false,
+      grid: currentGrid,
+      cellColors: currentColorGrid,
+      currentPieces: easyPieces,
+      reviveCount: state.reviveCount + 1,
+      quizActive: false,
+      dangerState: null,
+      ghost: null,
+      dragOverlay: null,
+      boardEpoch: state.boardEpoch + 1,
+      usedQuizHistory: nextUsedHistory,
+      cachedQuizQuestion: null, // Clear after use
+    });
+
+    syncSharedGrid(currentGrid);
+    invalidateDangerFeedback();
+    void get().preFetchQuizQuestion();
+  },
+
+  preFetchQuizQuestion: async () => {
+    try {
+      const state = get();
+      const question = await generateOpenRouterQuestion(state.usedQuizHistory);
+      set({ cachedQuizQuestion: question });
+    } catch (e) {
+      console.warn('Failed to pre-fetch OpenRouter quiz question:', e);
+      set({ cachedQuizQuestion: null });
+    }
+  },
+
+  registerUsedQuestion: (questionText: string) => {
+    const history = get().usedQuizHistory;
+    if (!history.includes(questionText)) {
+      set({ usedQuizHistory: [...history, questionText] });
     }
   },
 }));

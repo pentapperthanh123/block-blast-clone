@@ -1,5 +1,5 @@
 /**
- * Block Blast Clone - Main Entry Point
+ * Block Blast - Main Entry Point
  */
 
 import React, { useLayoutEffect } from 'react';
@@ -11,6 +11,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { GameScreen } from './src/screens/GameScreen';
 import { lockWebViewport } from './src/utils/lockWebViewport';
 import { UI_COLORS } from './src/constants';
+import './src/i18n';
 
 lockWebViewport();
 

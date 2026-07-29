@@ -3,30 +3,36 @@
  * Each theme has unique sounds for clear and drag end events
  */
 
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackSource } from 'expo-av';
 import { ThemeName } from './themes';
 
 export type SoundEvent = 'clear' | 'dragEnd' | 'place' | 'dragStart';
 
 // Global game sounds (not theme-specific)
-export const GAME_START_SOUND = require('../../assets/sounds/game-start.wav');
-export const GAME_OVER_SOUND = require('../../assets/sounds/game-over.wav');
-export const NEW_RECORD_SOUND = require('../../assets/sounds/new-record.wav');
+export const GAME_START_SOUND: AVPlaybackSource = require('../../assets/sounds/game-start.wav');
+export const GAME_OVER_SOUND: AVPlaybackSource = require('../../assets/sounds/game-over.wav');
+export const NEW_RECORD_SOUND: AVPlaybackSource = require('../../assets/sounds/new-record.wav');
 
 // Warning sounds for danger levels
-export const WARNING_LIGHT_SOUND = require('../../assets/sounds/warning-light.wav');
-export const WARNING_MEDIUM_SOUND = require('../../assets/sounds/warning-medium.wav');
-export const WARNING_CRITICAL_SOUND = require('../../assets/sounds/warning-critical.wav');
+export const WARNING_LIGHT_SOUND: AVPlaybackSource = require('../../assets/sounds/warning-light.wav');
+export const WARNING_MEDIUM_SOUND: AVPlaybackSource = require('../../assets/sounds/warning-medium.wav');
+export const WARNING_CRITICAL_SOUND: AVPlaybackSource = require('../../assets/sounds/warning-critical.wav');
 
 interface ThemeSounds {
-  clear: any; // Line/column clear sound (AVPlaybackSource when files added)
-  dragEnd: any; // Block placement sound
-  place: any; // Block drop sound
-  dragStart: any; // Block pickup/drag start sound
+  clear: AVPlaybackSource; // Line/column clear sound
+  dragEnd: AVPlaybackSource; // Block placement sound
+  place: AVPlaybackSource; // Block drop sound
+  dragStart: AVPlaybackSource; // Block pickup/drag start sound
 }
 
 // Sound configurations for each theme
 const THEME_SOUNDS: Record<ThemeName, ThemeSounds> = {
+  classic: {
+    clear: require('../../assets/sounds/ocean-clear.wav'),
+    dragEnd: require('../../assets/sounds/ocean-drop.wav'),
+    place: require('../../assets/sounds/ocean-place.wav'),
+    dragStart: require('../../assets/sounds/ocean-dragstart.wav'),
+  },
   watermelon: {
     clear: require('../../assets/sounds/watermelon-clear.wav'),
     dragEnd: require('../../assets/sounds/watermelon-drop.wav'),
@@ -50,12 +56,6 @@ const THEME_SOUNDS: Record<ThemeName, ThemeSounds> = {
     dragEnd: require('../../assets/sounds/sunset-drop.wav'),
     place: require('../../assets/sounds/sunset-place.wav'),
     dragStart: require('../../assets/sounds/sunset-dragstart.wav'),
-  },
-  gem: {
-    clear: require('../../assets/sounds/gem-clear.wav'),
-    dragEnd: require('../../assets/sounds/gem-drop.wav'),
-    place: require('../../assets/sounds/gem-place.wav'),
-    dragStart: require('../../assets/sounds/gem-dragstart.wav'),
   },
   milktea: {
     clear: require('../../assets/sounds/milktea-clear.wav'),
@@ -140,7 +140,7 @@ async function configureAudioModeIfNeeded() {
 export async function playThemeSound(
   theme: ThemeName,
   event: SoundEvent,
-  options?: number | PlaySoundOptions
+  options?: PlaySoundOptions | number,
 ): Promise<void> {
   try {
     void configureAudioModeIfNeeded();
@@ -154,7 +154,6 @@ export async function playThemeSound(
       pitch = getComboPitch(opts.combo);
     }
 
-    // Boost volume and slightly shift pitch up for multi-line clears
     let finalVolume = baseVolume;
     if (opts.linesCount && opts.linesCount > 1) {
       finalVolume = Math.min(1.0, baseVolume + (opts.linesCount - 1) * 0.1);
@@ -162,78 +161,25 @@ export async function playThemeSound(
         pitch = Math.min(1.4, 1.0 + (opts.linesCount - 1) * 0.08);
       }
     } else if (event === 'place' && !opts.pitch && (!opts.combo || opts.combo <= 1)) {
-      // Micro variation (0.96x - 1.04x) so repetitive taps sound organic & tactile
       pitch = 0.96 + Math.random() * 0.08;
     }
 
     const soundSource = THEME_SOUNDS[theme]?.[event];
-    if (!soundSource || soundSource === '') return;
+    if (!soundSource) return;
 
-    const cacheKey = `${theme}-${event}`;
-    let sounds = soundCache.get(cacheKey);
+    // Direct, instant playback with automatic status cleanup (Web-friendly)
+    const { sound: freshSound } = await Audio.Sound.createAsync(soundSource, {
+      shouldPlay: true,
+      volume: finalVolume,
+      rate: pitch,
+      shouldCorrectPitch: false,
+    });
 
-    if (!sounds || sounds.length === 0) {
-      sounds = [];
-      try {
-        const result = await Audio.Sound.createAsync(soundSource);
-        if (result?.sound) {
-          sounds.push(result.sound);
-          soundCache.set(cacheKey, sounds);
-          poolIndexCache.set(cacheKey, 0);
-        }
-      } catch {
-        // Continue to direct playback fallback below
+    freshSound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        freshSound.unloadAsync().catch(() => {});
       }
-    }
-
-    if (sounds && sounds.length > 0) {
-      const idx = poolIndexCache.get(cacheKey) || 0;
-      const sound = sounds[idx];
-      poolIndexCache.set(cacheKey, (idx + 1) % sounds.length);
-
-      // Fire and forget: safe playback with graceful fallback
-      (async () => {
-        try {
-          await sound.setVolumeAsync(finalVolume);
-          if (pitch !== 1.0) {
-            try {
-              await sound.setRateAsync(pitch, false);
-            } catch {
-              // Ignore rate error on platforms/devices that don't support pitch shifting
-            }
-          }
-          await sound.setPositionAsync(0);
-          await sound.playAsync();
-        } catch {
-          // Direct fallback creation if pool instance is locked
-          try {
-            const { sound: freshSound } = await Audio.Sound.createAsync(soundSource, {
-              shouldPlay: true,
-              volume: finalVolume,
-            });
-            freshSound.setOnPlaybackStatusUpdate((status) => {
-              if (status.isLoaded && status.didJustFinish) {
-                freshSound.unloadAsync();
-              }
-            });
-          } catch {
-            // Ignore
-          }
-        }
-      })();
-    } else {
-      // Direct one-off play if pool is empty
-      Audio.Sound.createAsync(soundSource, {
-        shouldPlay: true,
-        volume: finalVolume,
-      }).then(({ sound: freshSound }) => {
-        freshSound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            freshSound.unloadAsync();
-          }
-        });
-      }).catch(() => {});
-    }
+    });
   } catch {
     // Silently skip audio errors — never crash the game for a missing sound
   }
@@ -253,7 +199,7 @@ export async function preloadThemeSounds(theme: ThemeName): Promise<void> {
 
       try {
         const soundSource = THEME_SOUNDS[theme]?.[event];
-        if (!soundSource || soundSource === '') return; // Skip if not added yet
+        if (!soundSource) return; // Skip if not added yet
 
         const pool: Audio.Sound[] = [];
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -292,7 +238,7 @@ export async function unloadAllSounds(): Promise<void> {
  * @param volume Volume (0-1), default 0.7
  */
 export async function playGlobalSound(
-  soundSource: any,
+  soundSource: AVPlaybackSource,
   volume: number = 0.7
 ): Promise<void> {
   try {
@@ -317,11 +263,15 @@ export async function playGlobalSound(
 let activeWarningSound: Audio.Sound | null = null;
 let warningSoundToken = 0;
 
+const WARNING_CONFIG: Record<number, { source: AVPlaybackSource; volume: number }> = {
+  1: { source: WARNING_LIGHT_SOUND, volume: 0.35 },
+  2: { source: WARNING_MEDIUM_SOUND, volume: 0.45 },
+  3: { source: WARNING_CRITICAL_SOUND, volume: 0.55 },
+};
+
 /**
  * Play warning sound based on danger level
- * Level 1: Single beep
- * Level 2: Looping medium warning
- * Level 3: Looping critical warning (faster)
+ * Plays a discrete warning alert sound rather than an aggressive endless loop
  * @param dangerLevel 0-3
  */
 export async function playWarningSound(dangerLevel: number): Promise<void> {
@@ -329,36 +279,20 @@ export async function playWarningSound(dangerLevel: number): Promise<void> {
   try {
     // Stop any existing warning sound
     if (activeWarningSound) {
-      await activeWarningSound.stopAsync();
-      await activeWarningSound.unloadAsync();
+      try {
+        await activeWarningSound.stopAsync();
+        await activeWarningSound.unloadAsync();
+      } catch {}
       activeWarningSound = null;
     }
 
-    if (dangerLevel === 0) return; // No danger, no sound
+    const config = WARNING_CONFIG[dangerLevel];
+    if (!config || !config.source) return;
 
-    let soundSource: any;
-    let shouldLoop = false;
-    let volume = 0.5;
-
-    if (dangerLevel === 1) {
-      soundSource = WARNING_LIGHT_SOUND;
-      shouldLoop = false;
-      volume = 0.4;
-    } else if (dangerLevel === 2) {
-      soundSource = WARNING_MEDIUM_SOUND;
-      shouldLoop = true;
-      volume = 0.5;
-    } else {
-      soundSource = WARNING_CRITICAL_SOUND;
-      shouldLoop = true;
-      volume = 0.6;
-    }
-
-    if (!soundSource) return;
-
-    const { sound } = await Audio.Sound.createAsync(soundSource, {
-      isLooping: shouldLoop,
-      volume,
+    // Play once per danger state change / turn, non-looping for pleasant UX
+    const { sound } = await Audio.Sound.createAsync(config.source, {
+      isLooping: false,
+      volume: config.volume,
     });
 
     if (token !== warningSoundToken) {
@@ -367,19 +301,17 @@ export async function playWarningSound(dangerLevel: number): Promise<void> {
     }
 
     activeWarningSound = sound;
+    await sound.setPositionAsync(0);
     await sound.playAsync();
 
-    // Auto-cleanup for non-looping sounds
-    if (!shouldLoop) {
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-          if (activeWarningSound === sound) {
-            activeWarningSound = null;
-          }
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync();
+        if (activeWarningSound === sound) {
+          activeWarningSound = null;
         }
-      });
-    }
+      }
+    });
   } catch (error) {
     console.warn(`Failed to play warning sound for level ${dangerLevel}:`, error);
   }

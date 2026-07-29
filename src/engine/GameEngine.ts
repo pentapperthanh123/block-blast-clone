@@ -38,6 +38,7 @@ export class GameEngine {
       combo: 0,
       movesWithoutClear: 0,
       perfectClears: 0,
+      reviveCount: 0,
     };
   }
 

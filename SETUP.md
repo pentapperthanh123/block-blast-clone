@@ -1,4 +1,4 @@
-# Block Blast Clone - Setup Guide
+# Block Blast - Setup Guide
 
 ## 📋 Yêu cầu hệ thống
 

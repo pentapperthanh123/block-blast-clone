@@ -1,0 +1,57 @@
+{
+  "common": {
+    "play": "Play Now",
+    "home": "Home",
+    "settings": "Settings",
+    "score": "Score",
+    "high_score": "High Score",
+    "game_over": "Game Over!",
+    "new_record": "New Record!",
+    "your_score": "Your Score",
+    "best_score": "Best Score",
+    "play_again": "Replay",
+    "back": "Back",
+    "loading": "Loading..."
+  },
+  "settings": {
+    "title": "SETTINGS",
+    "language": "Language / Ngôn Ngữ",
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "theme": "Theme",
+    "sound_fx": "Sound Effects",
+    "voice_feedback": "Voice Feedback",
+    "voice_feedback_desc": "Announce praise on line clears",
+    "tts_voice_counter": "TTS Cell Score Counter",
+    "tts_voice_counter_desc": "Read out individual cell scores",
+    "danger_warning": "Danger Warning System",
+    "danger_warning_desc": "Loop warning audio when deadlock is near",
+    "clear_board_new": "Clear Board on Replay",
+    "clear_board_new_desc": "Start with an empty board",
+    "random_theme_new": "Random Theme on Replay",
+    "random_theme_new_desc": "Change theme automatically in next game",
+    "combo_mode": "Combo System Mode",
+    "combo_mode_persist": "Keep combo across all placements",
+    "combo_mode_reset": "Reset combo on dry placements"
+  },
+  "quiz": {
+    "title": "⚡️ REVIVAL GATE ⚡️",
+    "subtitle": "Answer this TOEIC question correctly to revive!",
+    "revive": "⚡️ REVIVE (TOEIC Quiz)",
+    "correct": "🎉 CORRECT!",
+    "incorrect": "❌ INCORRECT!",
+    "timeout": "⏰ TIME'S UP!",
+    "time_expired": "TIME OUT",
+    "continue": "Continue Game",
+    "next_question": "Another Question 🔄"
+  },
+  "home": {
+    "daily_streak": "Daily Win Streak",
+    "win": "WIN",
+    "adventure": "Adventure",
+    "classic": "Classic",
+    "resume": "Resume",
+    "more_games": "More Games",
+    "coming_soon": "coming soon — play Classic for now."
+  }
+}

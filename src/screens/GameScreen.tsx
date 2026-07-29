@@ -7,6 +7,7 @@ import { Dimensions, View, StyleSheet, StatusBar, type View as RNView } from 're
 import { useGameStore } from '../store/gameStore';
 import { GameHeader } from '../components/ui/GameHeader';
 import { GameOverModal } from '../components/ui/GameOverModal';
+import { QuizModal } from '../components/ui/QuizModal';
 import { NewRoundTransition } from '../components/ui/NewRoundTransition';
 import { GameBoard, type BoardLayout } from '../components/game/GameBoard';
 import { BlockTray } from '../components/game/BlockTray';
@@ -132,6 +133,7 @@ export const GameScreen: React.FC = () => {
       />
 
       {isGameOver && !inTransition && <GameOverModal />}
+      <QuizModal />
       <NewRoundTransition />
       <DevMenuOverlay />
     </View>

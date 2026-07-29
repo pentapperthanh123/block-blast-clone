@@ -3,6 +3,24 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Modal, SafeAreaVi
 import { useGameStore } from '../../store/gameStore';
 import { sharedClearMask } from '../../utils/sharedGrid';
 import { dragActive, ghostValid } from '../../utils/dragShared';
+import { playVoiceFeedback, getVoiceVolume, VoiceFeedbackTier } from '../../constants/voiceFeedback';
+import { playThemeSound } from '../../constants/themeSounds';
+
+const FEEDBACK_TIERS: readonly VoiceFeedbackTier[] = ['Good', 'Perfect', 'Awesome', 'Unbelievable'];
+
+const TIER_POINTS: Record<VoiceFeedbackTier, number> = {
+  Good: 100,
+  Perfect: 400,
+  Awesome: 1200,
+  Unbelievable: 3000,
+};
+
+const TIER_MULTIPLIERS: Record<VoiceFeedbackTier, number> = {
+  Good: 1,
+  Perfect: 2,
+  Awesome: 3,
+  Unbelievable: 4,
+};
 
 export const DevMenuOverlay = React.memo(() => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,29 +28,35 @@ export const DevMenuOverlay = React.memo(() => {
 
   if (!__DEV__) return null;
 
-  const triggerFeedback = (tier: 'Good' | 'Perfect' | 'Awesome' | 'Unbelievable') => {
+  const triggerFeedback = (tier: VoiceFeedbackTier) => {
     setIsOpen(false);
-    useGameStore.setState({
-      feedbackVisible: false,
-    });
+    useGameStore.setState({ feedbackVisible: false });
+
     setTimeout(() => {
-      import('../../constants/voiceFeedback').then(({ playVoiceFeedback, getVoiceVolume }) => {
-        playVoiceFeedback(tier, getVoiceVolume(tier));
-      });
+      void playVoiceFeedback(tier, getVoiceVolume(tier));
+      // Also play theme clear sound so user can test on Web
+      const current = useGameStore.getState().currentTheme;
+      void playThemeSound(current, 'clear', { linesCount: 4, combo: 2 });
+
+      const points = TIER_POINTS[tier];
+      const comboMultiplier = TIER_MULTIPLIERS[tier];
+
       useGameStore.setState((s) => ({
+        score: s.score + points,
+        combo: 2,
         feedbackVisible: true,
         feedbackNonce: (s.feedbackNonce || 0) + 1,
         lastScoreBreakdown: {
-          points: 100,
+          points,
           linesCleared: 4,
-          comboMultiplier: tier === 'Unbelievable' ? 4 : tier === 'Awesome' ? 3 : tier === 'Perfect' ? 2 : 1,
+          comboMultiplier,
           feedbackTier: tier,
         },
       }));
 
       setTimeout(() => {
         useGameStore.setState({ feedbackVisible: false });
-      }, 1400); // Match ANIMATION.SCORE_POPUP
+      }, 1400);
     }, 50);
   };
 
@@ -55,13 +79,13 @@ export const DevMenuOverlay = React.memo(() => {
     });
     
     setTimeout(() => {
-      // Trigger voice and popup score like a real perfect clear
-      import('../../constants/voiceFeedback').then(({ playVoiceFeedback, getVoiceVolume }) => {
-        playVoiceFeedback('Unbelievable', getVoiceVolume('Unbelievable'));
-      });
+      void playVoiceFeedback('Unbelievable', getVoiceVolume('Unbelievable'));
+      const current = useGameStore.getState().currentTheme;
+      void playThemeSound(current, 'clear', { linesCount: 5, combo: 10 });
       
       useGameStore.setState((s) => ({
         isAnimatingPerfectClear: true,
+        combo: 10,
         feedbackVisible: true,
         feedbackNonce: (s.feedbackNonce || 0) + 1,
         lastScoreBreakdown: {
@@ -72,7 +96,6 @@ export const DevMenuOverlay = React.memo(() => {
         },
       }));
       
-      // Reset state after animation completes
       setTimeout(() => {
         useGameStore.setState({ 
           isAnimatingPerfectClear: false,
@@ -89,10 +112,8 @@ export const DevMenuOverlay = React.memo(() => {
 
   const previewGlowLine = () => {
     setIsOpen(false);
-    // Simulate a drag active state and set a glow mask for Row 4 and Col 3
     dragActive.value = 1;
     ghostValid.value = 1;
-    // Row 4 = bit 12 (4 + 8), Col 3 = bit 3
     sharedClearMask.value = (1 << 12) | (1 << 3);
     
     setTimeout(() => {
@@ -117,49 +138,49 @@ export const DevMenuOverlay = React.memo(() => {
           <SafeAreaView style={styles.modalContainer}>
             <TouchableOpacity activeOpacity={1} style={styles.menu}>
               <View style={styles.header}>
-              <Text style={styles.title}>Developer Menu</Text>
-              <TouchableOpacity onPress={() => setIsOpen(false)} style={styles.closeBtn}>
-                <Text style={styles.closeText}>Close</Text>
-              </TouchableOpacity>
-            </View>
+                <Text style={styles.title}>Developer Menu</Text>
+                <TouchableOpacity onPress={() => setIsOpen(false)} style={styles.closeBtn}>
+                  <Text style={styles.closeText}>Close</Text>
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView contentContainerStyle={styles.content}>
-              <Text style={styles.sectionTitle}>Feedback / Mood</Text>
-              <View style={styles.row}>
-                {['Good', 'Perfect', 'Awesome', 'Unbelievable'].map(tier => (
-                  <TouchableOpacity 
-                    key={tier} 
-                    style={styles.actionBtn} 
-                    onPress={() => triggerFeedback(tier as any)}
-                  >
-                    <Text style={styles.actionText}>{tier}</Text>
+              <ScrollView contentContainerStyle={styles.content}>
+                <Text style={styles.sectionTitle}>Feedback / Mood</Text>
+                <View style={styles.row}>
+                  {FEEDBACK_TIERS.map((tier) => (
+                    <TouchableOpacity 
+                      key={tier} 
+                      style={styles.actionBtn} 
+                      onPress={() => triggerFeedback(tier)}
+                    >
+                      <Text style={styles.actionText}>{tier}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.sectionTitle}>Game Events</Text>
+                <View style={styles.row}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={triggerHighScore}>
+                    <Text style={styles.actionText}>New High Score</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
+                  <TouchableOpacity style={styles.actionBtn} onPress={triggerPerfectClear}>
+                    <Text style={styles.actionText}>Perfect Clear</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionBtn} onPress={previewGlowLine}>
+                    <Text style={styles.actionText}>Preview Glow Line</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, styles.dangerBtn]} onPress={triggerGameOver}>
+                    <Text style={[styles.actionText, styles.dangerText]}>Game Over</Text>
+                  </TouchableOpacity>
+                </View>
 
-              <Text style={styles.sectionTitle}>Game Events</Text>
-              <View style={styles.row}>
-                <TouchableOpacity style={styles.actionBtn} onPress={triggerHighScore}>
-                  <Text style={styles.actionText}>New High Score</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={triggerPerfectClear}>
-                  <Text style={styles.actionText}>Perfect Clear</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={previewGlowLine}>
-                  <Text style={styles.actionText}>Preview Glow Line</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.actionBtn, styles.dangerBtn]} onPress={triggerGameOver}>
-                  <Text style={[styles.actionText, styles.dangerText]}>Game Over</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.sectionTitle}>Settings</Text>
-              <View style={styles.row}>
-                <TouchableOpacity style={styles.actionBtn} onPress={cycleTheme}>
-                  <Text style={styles.actionText}>Cycle Theme ({currentTheme})</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
+                <Text style={styles.sectionTitle}>Settings</Text>
+                <View style={styles.row}>
+                  <TouchableOpacity style={styles.actionBtn} onPress={cycleTheme}>
+                    <Text style={styles.actionText}>Cycle Theme ({currentTheme})</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
             </TouchableOpacity>
           </SafeAreaView>
         </TouchableOpacity>
@@ -167,6 +188,8 @@ export const DevMenuOverlay = React.memo(() => {
     </>
   );
 });
+
+DevMenuOverlay.displayName = 'DevMenuOverlay';
 
 const styles = StyleSheet.create({
   triggerButton: {

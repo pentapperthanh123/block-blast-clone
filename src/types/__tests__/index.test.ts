@@ -49,6 +49,7 @@ describe('Type Definitions', () => {
       combo: 0,
       movesWithoutClear: 0,
       perfectClears: 0,
+      reviveCount: 0,
     };
     
     expect(gameState.score).toBe(100);

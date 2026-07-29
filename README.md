@@ -1,4 +1,4 @@
-# 🎮 Block Blast Clone
+# 🎮 Block Blast
 
 [![CI](https://github.com/pentapperthanh123/block-blast-clone/workflows/CI/badge.svg)](https://github.com/pentapperthanh123/block-blast-clone/actions/workflows/ci.yml)
 [![Security Audit](https://github.com/pentapperthanh123/block-blast-clone/workflows/Security%20Audit/badge.svg)](https://github.com/pentapperthanh123/block-blast-clone/actions/workflows/security.yml)

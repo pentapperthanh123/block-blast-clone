@@ -73,6 +73,7 @@ export const ScaledBlockPiece: React.FC<ScaledBlockPieceProps> = React.memo(({
 
   return <View style={styles.piece}>{cells}</View>;
 });
+ScaledBlockPiece.displayName = 'ScaledBlockPiece';
 
 export function getBoardPieceSize(block: BlockShape, cellSize?: number) {
   const { cellVisual } = getBoardMetrics();

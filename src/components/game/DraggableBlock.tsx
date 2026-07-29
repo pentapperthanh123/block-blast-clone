@@ -11,7 +11,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { BlockShape, Position } from '../../types';
+import { BlockShape } from '../../types';
 import { useGameStore } from '../../store/gameStore';
 import { DRAG } from '../../constants';
 import { playThemeSound } from '../../constants/themeSounds';
@@ -19,8 +19,6 @@ import { getThemePaintColor, resolveTheme } from '../../constants/themes';
 import {
   BOARD_BORDER_PAD,
   BoardLayout,
-  getBlockOccupiedCells,
-  pointerToCell,
 } from './GameBoard';
 import { getBoardMetrics } from '../../utils/boardMetrics';
 import { dragActive, dragPageX, dragPageY, ghostRow, ghostCol, ghostValid, ghostColor, dragIndex } from '../../utils/dragShared';
@@ -48,8 +46,6 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   const confirmGameOverIfDeadlocked = useGameStore(
     (s) => s.confirmGameOverIfDeadlocked,
   );
-  const setGhost = useGameStore((s) => s.setGhost);
-  const setSmartGhost = useGameStore((s) => s.setSmartGhost);
   const setDragOverlay = useGameStore((s) => s.setDragOverlay);
   const currentTheme = useGameStore((s) => s.currentTheme);
 
@@ -71,7 +67,6 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   const boardLayoutRef = useRef(boardLayout);
   boardLayoutRef.current = boardLayout;
   const ghostFrameRef = useRef<number | null>(null);
-  const pendingGhostRef = useRef<{ pageX: number; pageY: number } | null>(null);
   const dropInFlightRef = useRef(false);
 
   useEffect(() => {
@@ -82,9 +77,10 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   }, [block.id, dragging, tx, ty, dropHandled]);
 
   useEffect(() => {
+    const currentFrame = ghostFrameRef.current;
     return () => {
-      if (ghostFrameRef.current != null) {
-        cancelAnimationFrame(ghostFrameRef.current);
+      if (currentFrame != null) {
+        cancelAnimationFrame(currentFrame);
       }
       // Failsafe: If this component is unmounting but still holds the global drag lock, release it
       if (dragActive.value === 1 && dragIndex.value === index) {
@@ -120,8 +116,6 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   const theme = resolveTheme(currentTheme);
   const paint = getThemePaintColor(theme, block.color);
   const skinMode = theme.skinMode ?? (theme.lockedBaseColor ? 'replace' : 'overlay');
-
-  const ghostAnchorY = (pageY: number) => pageY - cellVisual * LIFT_RATIO;
 
   const resetSnap = () => {
     lastSnapRow.value = -999;
@@ -363,8 +357,8 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
       if (dragActive.value === 1 && dragIndex.value !== -1 && dragIndex.value !== index) return;
       
       dropHandled.value = 1;
-      let px = e.absoluteX > 0 ? e.absoluteX : dragPageX.value;
-      let py = e.absoluteY > 0 ? e.absoluteY : dragPageY.value;
+      const px = e.absoluteX > 0 ? e.absoluteX : dragPageX.value;
+      const py = e.absoluteY > 0 ? e.absoluteY : dragPageY.value;
       tx.value = 0;
       ty.value = 0;
 

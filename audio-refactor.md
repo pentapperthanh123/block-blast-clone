@@ -1,4 +1,4 @@
-# Plan: Refactor Modern Dynamic Audio System for Block Blast Clone
+# Plan: Refactor Modern Dynamic Audio System for Block Blast
 
 ## 🎯 Goal
 Overhaul the game's audio architecture to deliver modern, punchy, adaptive, and theme-immersive sound design matching top-tier titles like *Block Blast!* and *Tetris Effect*. Eliminate classic/static sound playback in favor of dynamic pitch scaling, multi-sample variety, low-latency pooling, and multi-line clear chord arpeggios.

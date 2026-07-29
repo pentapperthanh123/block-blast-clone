@@ -1,0 +1,57 @@
+{
+  "common": {
+    "play": "Chơi Ngay",
+    "home": "Trang Chủ",
+    "settings": "Cài Đặt",
+    "score": "Điểm",
+    "high_score": "Kỷ Lục",
+    "game_over": "Thua Cuộc!",
+    "new_record": "Kỷ Lục Mới!",
+    "your_score": "Điểm Của Bạn",
+    "best_score": "Điểm Cao Nhất",
+    "play_again": "Chơi Lại",
+    "back": "Quay Lại",
+    "loading": "Đang tải..."
+  },
+  "settings": {
+    "title": "CÀI ĐẶT",
+    "language": "Ngôn Ngữ / Language",
+    "vietnamese": "Tiếng Việt",
+    "english": "English",
+    "theme": "Chủ Đề",
+    "sound_fx": "Hiệu Ứng Âm Thanh",
+    "voice_feedback": "Giọng Nói Nhận Xét",
+    "voice_feedback_desc": "Phát giọng đọc khen ngợi khi ăn điểm",
+    "tts_voice_counter": "Đọc Điểm Từng Ô",
+    "tts_voice_counter_desc": "Giọng đọc đếm số điểm cộng thêm",
+    "danger_warning": "Cảnh Báo Nguy Hiểm",
+    "danger_warning_desc": "Phát âm thanh cảnh báo khi sắp hết chỗ",
+    "clear_board_new": "Dọn Bàn Khi Chơi Lại",
+    "clear_board_new_desc": "Bắt đầu với bàn cờ trống hoàn toàn",
+    "random_theme_new": "Ngẫu Nhiên Chủ Đề",
+    "random_theme_new_desc": "Đổi chủ đề ngẫu nhiên ở ván mới",
+    "combo_mode": "Chế Độ Combo",
+    "combo_mode_persist": "Duy trì qua các nước không ăn",
+    "combo_mode_reset": "Reset khi không ăn dòng nào"
+  },
+  "quiz": {
+    "title": "⚡️ CỔNG HỒI SINH ⚡️",
+    "subtitle": "Trả lời đúng câu hỏi TOEIC dưới đây để tiếp tục ván chơi!",
+    "revive": "⚡️ HỒI SINH (Quiz TOEIC)",
+    "correct": "🎉 CHÍNH XÁC!",
+    "incorrect": "❌ CHƯA ĐÚNG!",
+    "timeout": "⏰ HẾT GIỜ MẤT RỒI!",
+    "time_expired": "HẾT GIỜ",
+    "continue": "Tiếp Tục Chơi",
+    "next_question": "Câu Hỏi Khác 🔄"
+  },
+  "home": {
+    "daily_streak": "Chuỗi Thắng Hàng Ngày",
+    "win": "THẮNG",
+    "adventure": "Phiêu Lưu",
+    "classic": "Cổ Điển",
+    "resume": "Chơi Tiếp",
+    "more_games": "Game Khác",
+    "coming_soon": "sắp ra mắt — hãy chơi Cổ Điển trước nhé."
+  }
+}

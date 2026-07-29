@@ -1,6 +1,6 @@
 # GitHub Configuration
 
-Thư mục này chứa cấu hình GitHub Actions workflows và automation cho Block Blast Clone project.
+Thư mục này chứa cấu hình GitHub Actions workflows và automation cho Block Blast project.
 
 ## 📋 Workflows
 

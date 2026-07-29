@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -164,6 +164,7 @@ export const NewHighScoreEffect = React.memo<NewHighScoreEffectProps>(({
     </Animated.View>
   );
 });
+NewHighScoreEffect.displayName = 'NewHighScoreEffect';
 
 // Individual particle component
 const Particle = React.memo<{ index: number }>(({ index }) => {
@@ -228,6 +229,7 @@ const Particle = React.memo<{ index: number }>(({ index }) => {
     <Animated.View style={[styles.particle, particleStyle, { backgroundColor: color }]} />
   );
 });
+Particle.displayName = 'Particle';
 
 const styles = StyleSheet.create({
   container: {

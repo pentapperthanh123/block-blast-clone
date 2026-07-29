@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGameStore } from '../../store/gameStore';
 import { ThemeName, THEME_LIST } from '../../constants/themes';
 import { UI_COLORS } from '../../constants';
+import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../../i18n';
 import type { ComboMode } from '../../engine/ScoreCalculator';
 import {
   BlockGenSettings,
@@ -76,6 +78,8 @@ const ChipRow: React.FC<{
 );
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }) => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const currentTheme = useGameStore((s) => s.currentTheme);
   const changeTheme = useGameStore((s) => s.changeTheme);
   const comboMode = useGameStore((s) => s.comboMode);
@@ -138,13 +142,47 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
       <View style={styles.overlay}>
         <View style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.title}>Cài Đặt</Text>
+            <Text style={styles.title}>{t('settings.title')}</Text>
             <Pressable onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={28} color="#FFF" />
             </Pressable>
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
+              <View style={styles.languageRow}>
+                <Pressable
+                  style={[
+                    styles.langCard,
+                    currentLanguage === 'vi' && styles.langCardActive,
+                  ]}
+                  onPress={async () => {
+                    await changeLanguage('vi');
+                    void useGameStore.getState().preFetchQuizQuestion();
+                  }}
+                >
+                  <Text style={[styles.langText, currentLanguage === 'vi' && styles.langTextActive]}>
+                    🇻🇳 {t('settings.vietnamese')}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.langCard,
+                    currentLanguage === 'en' && styles.langCardActive,
+                  ]}
+                  onPress={async () => {
+                    await changeLanguage('en');
+                    void useGameStore.getState().preFetchQuizQuestion();
+                  }}
+                >
+                  <Text style={[styles.langText, currentLanguage === 'en' && styles.langTextActive]}>
+                    🇬🇧 {t('settings.english')}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Chế độ Combo</Text>
               <Text style={styles.sectionDescription}>
@@ -191,9 +229,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Cảnh Báo Nguy Hiểm</Text>
+              <Text style={styles.sectionTitle}>{t('settings.danger_warning')}</Text>
               <Text style={styles.sectionDescription}>
-                Viền nhấp nháy và âm thanh cảnh báo khi bàn sắp đầy
+                {t('settings.danger_warning_desc')}
               </Text>
 
               <Pressable
@@ -401,9 +439,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Giao Diện & Theme</Text>
+              <Text style={styles.sectionTitle}>{t('settings.theme')}</Text>
               <Text style={styles.sectionDescription}>
-                Chọn giao diện chủ đề yêu thích cho game
+                {currentLanguage === 'vi' ? 'Chọn giao diện chủ đề yêu thích cho game' : 'Select your favorite theme for the game'}
               </Text>
 
               <Pressable
@@ -531,10 +569,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ visible, onClose }
           <View style={styles.footer}>
             <View style={styles.footerRow}>
               <Pressable style={styles.cancelButton} onPress={handleClose}>
-                <Text style={styles.cancelButtonText}>Hủy</Text>
+                <Text style={styles.cancelButtonText}>{t('common.back')}</Text>
               </Pressable>
               <Pressable style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Lưu</Text>
+                <Text style={styles.saveButtonText}>{currentLanguage === 'vi' ? 'Lưu' : 'Save'}</Text>
               </Pressable>
             </View>
           </View>
@@ -885,5 +923,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '900',
     color: '#FFF',
+  },
+  languageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 8,
+  },
+  langCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+  },
+  langCardActive: {
+    backgroundColor: 'rgba(59, 130, 246, 0.16)',
+    borderColor: '#3B82F6',
+  },
+  langText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#CBD5E1',
+  },
+  langTextActive: {
+    color: '#3B82F6',
   },
 });

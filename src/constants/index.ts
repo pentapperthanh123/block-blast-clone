@@ -56,9 +56,9 @@ export const ANIMATION = {
   /** Line clear FX duration — keep short so input unlocks sooner */
   LINE_CLEAR: 360,
   COMBO_TEXT: 1000,
-  SCORE_POPUP: 1400,
+  SCORE_POPUP: 2200,
   /** Floating +N lifetime after place (increased to allow full animation) */
-  FLOATING_SCORE_MS: 1200,
+  FLOATING_SCORE_MS: 1600,
   /** Defer heavy UI (feedback / particles follow-up) after board paints */
   PLACE_FX_DEFER_MS: 32,
   LOADING_MS: 1800,

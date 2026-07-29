@@ -62,15 +62,15 @@ export const FloatingScore = React.memo<FloatingScoreProps>(({
           useNativeDriver: true,
         }),
         Animated.timing(translateY, {
-          toValue: -cellVisual * 1.6,
-          duration: 700,
+          toValue: -cellVisual * 2.0,
+          duration: 900,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
       ]),
       Animated.timing(opacity, {
         toValue: 0,
-        duration: kind === 'like' ? 400 : 280,
+        duration: kind === 'like' ? 450 : 400,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
@@ -169,3 +169,5 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
 });
+
+FloatingScore.displayName = 'FloatingScore';

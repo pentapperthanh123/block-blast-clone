@@ -134,6 +134,7 @@ export const BlockCell: React.FC<BlockCellProps> = React.memo(({
 
   return activeContent;
 }, blockCellPropsEqual);
+BlockCell.displayName = 'BlockCell';
 
 const styles = StyleSheet.create({
   emptyCell: {

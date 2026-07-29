@@ -1,4 +1,4 @@
-# Block Blast Clone - Project Structure
+# Block Blast - Project Structure
 
 ## 📁 Complete Folder Structure
 

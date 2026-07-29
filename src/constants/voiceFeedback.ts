@@ -3,12 +3,12 @@
  * Uses Expo Speech to speak feedback words aloud
  */
 
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackSource } from 'expo-av';
 
 export type VoiceFeedbackTier = 'Good' | 'Perfect' | 'Awesome' | 'Unbelievable';
 
 // Pre-define mapping of files
-const AUDIO_FILES: Record<VoiceFeedbackTier, any> = {
+const AUDIO_FILES: Record<VoiceFeedbackTier, AVPlaybackSource> = {
   Good: require('../../assets/sounds/good.wav'),
   Perfect: require('../../assets/sounds/perfect.wav'),
   Awesome: require('../../assets/sounds/awesome.wav'),
@@ -76,24 +76,24 @@ export async function playVoiceFeedback(
   customVolume?: number
 ): Promise<void> {
   try {
-    let sounds = loadedSounds[tier];
-    if (!sounds || sounds.length === 0) {
-      await preloadAllVoiceFeedback();
-      sounds = loadedSounds[tier];
-      if (!sounds || sounds.length === 0) return;
-    }
+    const soundSource = AUDIO_FILES[tier];
+    if (!soundSource) return;
 
     const volume = customVolume ?? SPEECH_CONFIG[tier].volume;
-    
-    // Get next sound from pool
-    const idx = poolIndex[tier];
-    const sound = sounds[idx];
-    poolIndex[tier] = (idx + 1) % POOL_SIZE;
-    
-    // Fire and forget (non-blocking)
-    sound.setVolumeAsync(volume).then(() => sound.replayAsync());
+
+    // Direct, reliable audio playback with automatic cleanup
+    const { sound } = await Audio.Sound.createAsync(
+      soundSource,
+      { shouldPlay: true, volume }
+    );
+
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status.isLoaded && status.didJustFinish) {
+        sound.unloadAsync().catch(() => {});
+      }
+    });
   } catch (error) {
-    console.warn(`Failed to play pre-recorded sound for ${tier}:`, error);
+    console.warn(`Failed to play pre-recorded voice feedback sound for ${tier}:`, error);
   }
 }
 

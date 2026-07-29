@@ -1,4 +1,4 @@
-# 🌿 Git Workflow Strategy - Block Blast Clone
+# 🌿 Git Workflow Strategy - Block Blast
 
 ## 📋 Branch Structure
 

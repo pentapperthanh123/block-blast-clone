@@ -1,4 +1,4 @@
-# Block Blast Clone - Master Blueprint
+# Block Blast - Master Blueprint
 
 ## 🎯 Project Overview
 

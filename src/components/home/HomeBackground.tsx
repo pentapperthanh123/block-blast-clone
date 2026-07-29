@@ -107,6 +107,8 @@ const Floater = React.memo<FloaterProps>(({
   );
 });
 
+Floater.displayName = 'Floater';
+
 export type CandyBackgroundProps = {
   density?: 'rich' | 'subtle';
 };
@@ -179,10 +181,14 @@ export const CandyBackground = React.memo<CandyBackgroundProps>(({
   );
 });
 
+CandyBackground.displayName = 'CandyBackground';
+
 /** @deprecated Prefer CandyBackground — kept for Home import compatibility */
 export const HomeBackground = React.memo(() => (
   <CandyBackground density="rich" />
 ));
+
+HomeBackground.displayName = 'HomeBackground';
 
 const styles = StyleSheet.create({
   deep: {

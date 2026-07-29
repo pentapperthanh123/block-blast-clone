@@ -134,6 +134,7 @@ const DragOverlayPiece = React.memo(({
     </>
   );
 });
+DragOverlayPiece.displayName = 'DragOverlayPiece';
 
 export const DragOverlay = React.memo<DragOverlayProps>(({
   originX,
@@ -198,6 +199,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   }
 });
+DragOverlay.displayName = 'DragOverlay';
 
 const GlowLine = React.memo(({ index, isRow, boardLayout, originX, originY }: { index: number, isRow: boolean, boardLayout: BoardLayout, originX: number, originY: number }) => {
   const animStyle = useAnimatedStyle(() => {
@@ -234,3 +236,4 @@ const GlowLine = React.memo(({ index, isRow, boardLayout, originX, originY }: { 
     </Animated.View>
   );
 });
+GlowLine.displayName = 'GlowLine';

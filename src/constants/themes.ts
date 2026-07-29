@@ -1,9 +1,9 @@
 export type ThemeName =
+  | 'classic'
   | 'watermelon'
   | 'icecream'
   | 'ocean'
   | 'sunset'
-  | 'gem'
   | 'milktea'
   | 'love'
   | 'jollibee'
@@ -63,6 +63,9 @@ export interface ThemeConfig {
 }
 
 // SVG Patterns for each theme - optimized for small block cells
+/** Classic retro 3D bevel overlay (multicolor blocks) */
+const SVG_CLASSIC = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><path d="M 0 0 L 130 0 L 116 14 L 14 14 L 14 116 L 0 130 Z" fill="%23ffffff" opacity="0.45"/><path d="M 130 130 L 0 130 L 14 116 L 116 116 L 116 14 L 130 0 Z" fill="%23000000" opacity="0.18"/><rect x="0" y="0" width="130" height="130" fill="none" stroke="%23000000" stroke-width="4" opacity="0.15"/></svg>`;
+
 /** Enhanced Watermelon with 3D effect, gradient, seeds, and realistic rind layers */
 const SVG_WATERMELON = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="melonPink" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%23ff7675"/><stop offset="100%25" stop-color="%23d63031"/></linearGradient><filter id="blockShadow" x="-15%25" y="-15%25" width="130%25" height="130%25"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="%23000" flood-opacity="0.3"/></filter></defs><g filter="url(%23blockShadow)"><rect width="130" height="130" rx="20" fill="%230b6623"/><rect x="6" y="6" width="118" height="118" rx="16" fill="url(%23melonPink)"/><path d="M 6 100 L 124 100 L 124 108 A 16 16 0 0 1 108 124 L 22 124 A 16 16 0 0 1 6 108 Z" fill="%23ffffff" opacity="0.9"/><path d="M 6 114 L 124 114 A 10 10 0 0 1 114 124 L 22 124 A 10 10 0 0 1 6 114 Z" fill="%2300b894"/><ellipse cx="45" cy="55" rx="5" ry="8" transform="rotate(-15 45 55)" fill="%232d3436"/><ellipse cx="85" cy="70" rx="5" ry="8" transform="rotate(20 85 70)" fill="%232d3436"/><ellipse cx="65" cy="40" rx="4" ry="7" transform="rotate(5 65 40)" fill="%232d3436"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23ffffff" opacity="0.25"/><rect x="6" y="6" width="118" height="118" rx="16" fill="none" stroke="%23000000" stroke-width="4" opacity="0.12"/></g></svg>`;
 
@@ -75,11 +78,6 @@ const SVG_OCEAN = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/sv
 /** Sunset icon — sun rising/setting over wavy ocean water (matching image spec) */
 const SVG_SUNSET = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="sunsetSky" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%23FFFBF5"/><stop offset="100%25" stop-color="%23FFE8D6"/></linearGradient></defs><rect width="130" height="130" rx="20" fill="%231E293B"/><rect x="6" y="6" width="118" height="118" rx="16" fill="url(%23sunsetSky)"/><path d="M 65 18 L 65 28 M 38 29 L 46 37 M 92 29 L 84 37 M 24 54 L 35 54 M 106 54 L 95 54" stroke="%23FF4500" stroke-width="5" stroke-linecap="round"/><path d="M 40 68 A 25 25 0 0 1 90 68 Z" fill="%23FF4500"/><path d="M 6 68 L 124 68 L 124 108 A 16 16 0 0 1 108 124 L 22 124 A 16 16 0 0 1 6 108 Z" fill="%2342A5F5"/><path d="M 6 82 Q 35 72 65 82 T 124 82 L 124 108 A 16 16 0 0 1 108 124 L 22 124 A 16 16 0 0 1 6 108 Z" fill="%232196F3"/><path d="M 6 96 Q 35 88 65 96 T 124 96 L 124 108 A 16 16 0 0 1 108 124 L 22 124 A 16 16 0 0 1 6 108 Z" fill="%231E88E5"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23ffffff" opacity="0.3"/><rect x="6" y="6" width="118" height="118" rx="16" fill="none" stroke="%23000000" stroke-width="4" opacity="0.15"/></svg>`;
 
-const SVG_GEM = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gemGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23A78BFA;stop-opacity:1"/><stop offset="100%" style="stop-color:%237C3AED;stop-opacity:1"/></linearGradient></defs><polygon points="50,0 100,25 100,75 50,100 0,75 0,25" fill="url(%23gemGrad)"/><polygon points="50,15 85,35 50,60 15,35" fill="rgba(255,255,255,0.5)"/><path d="M 50 15 L 50 60" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><path d="M 15 35 L 85 35" stroke="rgba(255,255,255,0.25)" stroke-width="2"/></svg>`;
-
-/** Enhanced Milk Tea with 3D cup, boba pearls, straw, and gradient */
-const SVG_MILKTEA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="milkTeaGrad" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%23ffeaa7"/><stop offset="100%25" stop-color="%23fab1a0"/></linearGradient><filter id="blockShadow" x="-15%25" y="-15%25" width="130%25" height="130%25"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="%23000" flood-opacity="0.3"/></filter></defs><g filter="url(%23blockShadow)"><rect width="130" height="130" rx="20" fill="%235c3a21"/><rect x="6" y="6" width="118" height="118" rx="16" fill="url(%23milkTeaGrad)"/><path d="M 42 38 L 88 38 L 81 102 L 49 102 Z" fill="%23ffffff" opacity="0.9"/><path d="M 45 46 L 85 46 L 81 100 L 49 100 Z" fill="%23ff7675" opacity="0.75"/><circle cx="58" cy="92" r="5" fill="%232d3436"/><circle cx="70" cy="94" r="5.5" fill="%232d3436"/><circle cx="64" cy="84" r="5" fill="%232d3436"/><rect x="68" y="14" width="8" height="38" rx="3" transform="rotate(15 68 14)" fill="%2300b894"/><rect x="70" y="14" width="3" height="38" transform="rotate(15 70 14)" fill="%23ffffff" opacity="0.7"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23ffffff" opacity="0.35"/><rect x="6" y="6" width="118" height="118" rx="16" fill="none" stroke="%23000000" stroke-width="4" opacity="0.12"/></g></svg>`;
-
 /** Love — soft rose block + heart (warm couple palette) */
 const SVG_LOVE = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="loveRose" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%23FDA4AF"/><stop offset="55%25" stop-color="%23FB7185"/><stop offset="100%25" stop-color="%23E11D48"/></linearGradient><filter id="loveShadow" x="-15%25" y="-15%25" width="130%25" height="130%25"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="%23000" flood-opacity="0.28"/></filter></defs><g filter="url(%23loveShadow)"><rect width="130" height="130" rx="22" fill="%239F1239"/><rect x="6" y="6" width="118" height="118" rx="18" fill="url(%23loveRose)"/><path d="M 65 98 C 38 78 28 58 38 44 C 46 32 58 34 65 44 C 72 34 84 32 92 44 C 102 58 92 78 65 98 Z" fill="%23FFF1F2" opacity="0.95"/><path d="M 65 90 C 44 74 36 58 44 48 C 50 40 58 42 65 50 C 72 42 80 40 86 48 C 94 58 86 74 65 90 Z" fill="%23FECDD3" opacity="0.85"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 32 L 32 32 A 26 26 0 0 1 6 58 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23FFF7ED" opacity="0.35"/><circle cx="42" cy="28" r="4" fill="%23FEF3C7" opacity="0.75"/><circle cx="88" cy="34" r="3" fill="%23FEF3C7" opacity="0.65"/><rect x="6" y="6" width="118" height="118" rx="18" fill="none" stroke="%23000000" stroke-width="4" opacity="0.1"/></g></svg>`;
 
@@ -89,10 +87,28 @@ const SVG_COFFEE = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/s
 /** Matcha Latte — rich green matcha, whisked foam, tea leaf detail */
 const SVG_MATCHA = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="matchaGrad" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%237CB342"/><stop offset="100%25" stop-color="%2333691E"/></linearGradient></defs><rect width="130" height="130" rx="20" fill="%231B5E20"/><rect x="6" y="6" width="118" height="118" rx="16" fill="url(%23matchaGrad)"/><circle cx="65" cy="65" r="30" fill="%23F1F8E9" opacity="0.9"/><path d="M 45 65 C 45 50 65 45 65 65 C 65 85 85 80 85 65" stroke="%23558B2F" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M 30 35 C 30 25 45 20 50 35 C 50 45 35 50 30 35 Z" fill="%23689F38"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23ffffff" opacity="0.3"/><rect x="6" y="6" width="118" height="118" rx="16" fill="none" stroke="%23000000" stroke-width="4" opacity="0.15"/></svg>`;
 
-/** Beer — amber lager, frothy white head, effervescent bubbles */
-const SVG_BEER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130"><defs><linearGradient id="beerGrad" x1="0%25" y1="0%25" x2="0%25" y2="100%25"><stop offset="0%25" stop-color="%23FFC107"/><stop offset="100%25" stop-color="%23FF8F00"/></linearGradient></defs><rect width="130" height="130" rx="20" fill="%23E65100"/><rect x="6" y="6" width="118" height="118" rx="16" fill="url(%23beerGrad)"/><path d="M 6 6 L 124 6 L 124 34 Q 100 42 65 34 Q 30 42 6 34 Z" fill="%23FFFFFF"/><circle cx="20" cy="20" r="10" fill="%23FFFFFF"/><circle cx="45" cy="24" r="12" fill="%23FFFFFF"/><circle cx="75" cy="22" r="11" fill="%23FFFFFF"/><circle cx="105" cy="20" r="10" fill="%23FFFFFF"/><circle cx="30" cy="65" r="4" fill="%23FFFFFF" opacity="0.6"/><circle cx="55" cy="85" r="5" fill="%23FFFFFF" opacity="0.5"/><circle cx="80" cy="55" r="3.5" fill="%23FFFFFF" opacity="0.7"/><circle cx="95" cy="75" r="4" fill="%23FFFFFF" opacity="0.6"/><path d="M 20 6 L 110 6 A 14 14 0 0 1 124 20 L 124 30 L 30 30 A 24 24 0 0 1 6 54 L 6 20 A 14 14 0 0 1 20 6 Z" fill="%23ffffff" opacity="0.35"/><rect x="6" y="6" width="118" height="118" rx="16" fill="none" stroke="%23000000" stroke-width="4" opacity="0.15"/></svg>`;
-
 export const THEMES: Record<ThemeName, ThemeConfig> = {
+  classic: {
+    id: 'classic',
+    name: 'Classic',
+    source: SVG_CLASSIC,
+    skinMode: 'overlay', // Allows underlying block.color to show through
+    palette: {
+      background: '#2B395E',
+      backgroundDeep: '#181E32',
+      glowMid: '#4F6196',
+      glowBottom: '#2B395E',
+    },
+    boardColor: '#1A2138',
+    clearFx: {
+      particleCount: 16,
+      colors: ['#FFFFFF', '#FFD700', '#FF3B30', '#4CD964', '#5AC8FA'],
+      shape: 'diamond',
+      rise: 36,
+      size: 10,
+      burst: 24,
+    },
+  },
   watermelon: {
     id: 'watermelon',
     name: 'Watermelon',
@@ -181,41 +197,19 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
       burst: 26,
     },
   },
-  gem: {
-    id: 'gem',
-    name: 'Gem',
-    source: SVG_GEM,
-    lockedBaseColor: '#7C3AED',
-    skinMode: 'replace',
-    palette: {
-      background: '#8B5CF6',
-      backgroundDeep: '#5B21B6',
-      glowMid: '#A78BFA',
-      glowBottom: '#7C3AED',
-    },
-    boardColor: '#4C1D95',
-    clearFx: {
-      particleCount: 18,
-      colors: ['#E9D5FF', '#A78BFA', '#FFFFFF', '#7C3AED', '#F0ABFC'],
-      shape: 'diamond',
-      rise: 32,
-      size: 8,
-      burst: 28,
-    },
-  },
   milktea: {
     id: 'milktea',
-    name: 'Milk Tea',
-    source: SVG_MILKTEA,
-    lockedBaseColor: '#D97706',
+    name: 'Gong Cha',
+    source: 'image:milktea',
+    lockedBaseColor: '#C41E3A',
     skinMode: 'replace',
     palette: {
-      background: '#F59E0B',
-      backgroundDeep: '#92400E',
-      glowMid: '#FCD34D',
-      glowBottom: '#D97706',
+      background: '#C41E3A',
+      backgroundDeep: '#800020',
+      glowMid: '#FDE68A',
+      glowBottom: '#A01830',
     },
-    boardColor: '#78350F',
+    boardColor: '#4A0404',
     clearFx: {
       particleCount: 16,
       colors: ['#FEF3C7', '#FCD34D', '#D97706', '#92400E', '#422006'],
@@ -317,16 +311,16 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
   beer: {
     id: 'beer',
     name: 'Beer',
-    source: SVG_BEER,
-    lockedBaseColor: '#FFB300',
+    source: 'image:beer',
+    lockedBaseColor: '#008444',
     skinMode: 'replace',
     palette: {
-      background: '#FFC107',
-      backgroundDeep: '#E65100',
-      glowMid: '#FFECB3',
-      glowBottom: '#FF8F00',
+      background: '#008444',
+      backgroundDeep: '#00592D',
+      glowMid: '#4ADE80',
+      glowBottom: '#006B37',
     },
-    boardColor: '#BF360C',
+    boardColor: '#003B1D',
     clearFx: {
       particleCount: 20,
       colors: ['#FFFFFF', '#FFF8E1', '#FFE082', '#FFCA28', '#FF8F00'],
@@ -351,7 +345,7 @@ const FALLBACK_CLEAR_FX: ThemeClearFx = {
 
 /** Always returns a full theme (incl. clearFx) — never undefined fields */
 export function resolveTheme(id?: ThemeName | null): ThemeConfig {
-  const base = (id && THEMES[id]) || THEMES.ocean;
+  const base = (id && THEMES[id]) || THEMES.classic;
   return {
     ...base,
     clearFx: base.clearFx ?? FALLBACK_CLEAR_FX,
@@ -362,7 +356,7 @@ export function pickRandomTheme(current?: ThemeName): ThemeName {
   const pool = current
     ? THEME_LIST.filter((t) => t.id !== current)
     : THEME_LIST;
-  return pool[Math.floor(Math.random() * pool.length)]?.id ?? 'ocean';
+  return pool[Math.floor(Math.random() * pool.length)]?.id ?? 'classic';
 }
 
 /** Paint color for cells/pieces — locked themes ignore rainbow block.color */
